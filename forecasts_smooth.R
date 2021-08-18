@@ -6,8 +6,8 @@ librarian::shelf(
 # scripts in /Section 3 - Lockdown modeling/src/:
 #     * bake_pi.R       # DEPRECATED
 #     * cleanr_esir.R
-f <- list.files("~/projects/covind_wave2/functions/")
-for (i in seq_along(f)) {source(paste0("~/projects/covind_wave2/functions/", f[i]))}
+f <- list.files("~/projects/science_revision/src/")
+for (i in seq_along(f)) {source(paste0("~/projects/science_revision/src/", f[i]))}
 
 today   <- Sys.Date() - 1
 arrayid <- Sys.getenv("SLURM_ARRAY_TASK_ID")
@@ -15,11 +15,11 @@ set.seed(20192020) # default: 20192020
 
 # Set variables based on testing or production
 if (Sys.getenv("production") == "TRUE") { 
-  data_repo <- "~/projects/covind_wave2/data/"
+  data_repo <- "~/projects/science_revision/data/"
   Ms        <- 5e5    # 5e5 recommended (5e3 for testing - but not stable)
   nburnins  <- 2e5    # 2e5 recommended (2e3 for testing - but not stable)
 } else {
-  data_repo <- "~/projects/covind_wave2/test/"
+  data_repo <- "~/projects/science_revision/test/"
   Ms        <- 5e3    # 5e5 recommended (5e3 for testing - but not stable)
   nburnins  <- 2e3    # 2e5 recommended (2e3 for testing - but not stable)
 }
@@ -32,10 +32,10 @@ save_mcmc          <- TRUE
 save_plot_data     <- TRUE
 use_sched          <- "India"
 
-dat <- read_csv("~/projects/covind_wave2/data_for_lockdown.csv", col_types = cols()) %>%
+dat <- read_csv("~/projects/science_revision/data_for_lockdown.csv", col_types = cols()) %>%
   filter(date <= "2021-05-15")
 
-pi_sched  <- read_tsv("~/projects/covind_wave2/pi_schedule.txt", col_types = cols())
+pi_sched  <- read_tsv("~/projects/science_revision/pi_schedule.txt", col_types = cols())
 use_these_pis <- pi_sched %>%
   select(-c(nseq, r_est)) %>%
   dplyr::filter(place == use_sched) %>%
