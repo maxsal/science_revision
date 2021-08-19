@@ -41,7 +41,8 @@ use_these_pis <- pi_sched %>%
   dplyr::filter(place == use_sched) %>%
   arrange(date) %>%
   pull(smooth_pis) %>%
-  c(1, .)
+  c(1, .)%>%
+  head(., -1)
 
 
 # directory ----------
@@ -54,7 +55,7 @@ if (arrayid == 1) {
   last_obs   <- as.Date("2021-03-14")
   start_obs  <- last_obs - 99
   start_proj <- last_obs + 1
-  last_proj  <- last_obs + 120
+  last_proj  <- last_obs + 200
   proj_days  <- as.numeric(last_proj - start_proj) - 1
   esir_days  <- as.numeric(last_proj - start_obs)
   
@@ -67,7 +68,7 @@ if (arrayid == 1) {
   R           <- unlist(RI_complete/N)           # proportion of recovered per day
   Y           <- unlist(NI_complete/N-R)
   
-  use_these_dates <- head(format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y"), -1)
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
   casename   <- glue("{last_obs + 1}_smooth{span}")
   
@@ -101,7 +102,7 @@ if (arrayid == 2) {
   last_obs   <- as.Date("2021-03-29")
   start_obs  <- last_obs - 99
   start_proj <- last_obs + 1
-  last_proj  <- last_obs + 120
+  last_proj  <- last_obs + 200
   proj_days  <- as.numeric(last_proj - start_proj) - 1
   esir_days  <- as.numeric(last_proj - start_obs)
   
@@ -114,7 +115,7 @@ if (arrayid == 2) {
   R           <- unlist(RI_complete/N)           # proportion of recovered per day
   Y           <- unlist(NI_complete/N-R)
   
-  use_these_dates <- head(format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y"), -1)
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
   casename   <- glue("{last_obs + 1}_smooth{span}")
   
