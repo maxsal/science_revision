@@ -20,8 +20,8 @@ if (Sys.getenv("production") == "TRUE") {
   nburnins  <- 2e5    # 2e5 recommended (2e3 for testing - but not stable)
 } else {
   data_repo <- "~/projects/science_revision/test/"
-  Ms        <- 5e2    # 5e5 recommended (5e3 for testing - but not stable)
-  nburnins  <- 2e2    # 2e5 recommended (2e3 for testing - but not stable)
+  Ms        <- 5e3    # 5e5 recommended (5e3 for testing - but not stable)
+  nburnins  <- 2e3    # 2e5 recommended (2e3 for testing - but not stable)
 }
 
 # specifications ----------
