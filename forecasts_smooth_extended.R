@@ -20,8 +20,8 @@ if (Sys.getenv("production") == "TRUE") {
   nburnins  <- 2e5    # 2e5 recommended (2e3 for testing - but not stable)
 } else {
   data_repo <- "~/projects/science_revision/test/"
-  Ms        <- 5e3    # 5e5 recommended (5e3 for testing - but not stable)
-  nburnins  <- 2e3    # 2e5 recommended (2e3 for testing - but not stable)
+  Ms        <- 5e2    # 5e5 recommended (5e3 for testing - but not stable)
+  nburnins  <- 2e2    # 2e5 recommended (2e3 for testing - but not stable)
 }
 
 # specifications ----------
@@ -115,7 +115,7 @@ if (arrayid == 2) {
   R           <- unlist(RI_complete/N)           # proportion of recovered per day
   Y           <- unlist(NI_complete/N-R)
   
-  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
   casename   <- glue("{last_obs + 1}_smooth{span}")
   
