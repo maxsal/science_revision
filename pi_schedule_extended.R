@@ -23,7 +23,7 @@ pi_sched_ext <- dat %>%
     nom = 1:nrow(.)
   ) %>%
   mutate(
-    smooth_pis = predict(loess(pis ~ nom, span = 1))
+    smooth_pis = predict(loess(pis ~ nom, span = 0.5))
   )
 
 if (nrow(pi_sched_ext) < length(dates)) {
@@ -67,6 +67,7 @@ comp_plt <- bind_rows(
     plot.title = element_text(face = "bold")
   )
 
+comp_plt
 
 ggsave(plot = comp_plt,
        filename = here("fig", "diagnostic", glue("{location}_pi_comp.pdf")),
@@ -115,7 +116,10 @@ comp_plt <- bind_rows(
   pi_sched %>% filter(place == location) %>% select(place, date, smooth_pis) %>% mutate(schedule = "old"),
   pi_sched_ext_mh %>% select(place, date, smooth_pis) %>% mutate(schedule = "new")
 ) %>%
-  ggplot(aes(x = date, y = smooth_pis, group = schedule, color = schedule)) +
+  ggplot(aes(x = date, y = smooth_pis, group = schedule, color = schedule)) + geom_vline(xintercept = as.Date(start_proj) + (4*7), color = "blue", size = 1, linetype = 2) +
+  geom_vline(xintercept = as.Date(start_proj) + (6*7), color = "blue", size = 1, linetype = 2) +
+  geom_vline(xintercept = as.Date(start_proj) + (8*7), color = "blue", size = 1, linetype = 2) +
+  
   geom_vline(xintercept = as.Date(v_date), color = "gray40", size = 1, linetype = 2) +
   geom_line(size = 1) +
   scale_color_brewer(palette = "Dark2") +
@@ -135,16 +139,62 @@ comp_plt <- bind_rows(
     plot.title = element_text(face = "bold")
   )
 
-
 ggsave(plot = comp_plt,
        filename = here("fig", "diagnostic", glue("{location}_pi_comp.pdf")),
        width = 7, height = 5,
        device = cairo_pdf)
 
+# Maharashtra early intervention -----------
+location   <- "Maharashtra"
+start_proj <- as.Date("2021-03-28")
+end_proj   <- as.Date("2021-04-14")
+dates      <- seq.Date(from = start_proj, to = end_proj, by = "day")
+length_out <- length(dates)
+end_proj   <- start_proj + length_out
+
+
+start_r <-  (dat %>% filter(place == location & between(date, start_proj - 7, start_proj - 1)) %>% pull(r_est) %>% mean(na.rm = T))
+
+pi_sched_ext <- dat %>%
+  filter(place == location & between(date, start_proj, end_proj)) %>%
+  select(place, date, cases, daily_cases, r_est) %>%
+  arrange(date) %>%
+  mutate(
+    pis = r_est / start_r,
+    nom = 1:nrow(.)
+  ) %>%
+  mutate(
+    smooth_pis = predict(loess(pis ~ nom, span = 1))
+  )
+
+pi_sched_ext_mh <- pi_sched_ext %>%
+  mutate(
+    smooth_pis = case_when(smooth_pis > 1 ~ 1, T ~ smooth_pis),
+    scenario_dates = glue("{format(start_proj, '%b %d')} - {format(end_proj, '%b %d')}, {format(end_proj, '%Y')}"),
+    scenario = "Maharashtra pre-lockdown"
+  )
+
+pi_sched_early_mh <- tibble(
+  date = seq.Date(from = start_proj, length.out = 100, by = "day"),
+  pis = data.table::nafill(pi_sched_ext$smooth_pis[1:100], type = "locf")) %>%
+  mutate(
+    smooth_pis     = predict(loess(pis ~ as.numeric(date), span = 1)),
+    place          = "Maharashtra early",
+    scenario_dates = glue("{format(start_proj, '%b %d')} - {format(end_proj, '%b %d')}, {format(end_proj, '%Y')}"),
+    nom            = 1:100
+    )
+  
+pi_sched_early_mh %>%
+  ggplot(aes(x = date, y= smooth_pis)) +
+  geom_line(size = 1) +
+  theme_minimal()
+
+
 # combine ------------
 pi_ext_comb <- bind_rows(
   pi_sched_ext_ind,
-  pi_sched_ext_mh
+  pi_sched_ext_mh,
+  pi_sched_early_mh
 )
 
 write_tsv(x = pi_ext_comb, file = "pi_schedule_extended.txt")
