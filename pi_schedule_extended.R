@@ -95,14 +95,6 @@ pi_sched_ext <- dat %>%
     smooth_pis = predict(loess(pis ~ nom, span = 1))
   )
 
-# if (nrow(pi_sched_ext) < length(dates)) {
-#   pi_sched_ext <- bind_rows(
-#     pi_sched_ext,
-#     tibble(date = seq.Date(from = max(pi_sched_ext$date) + 1, length.out = length(dates) - nrow(pi_sched_ext), by = "day"), smooth_pis = NA),
-#   ) %>%
-#     mutate(smooth_pis = data.table::nafill(smooth_pis, type = "locf"))
-# }
-
 pi_sched_ext_mh <- pi_sched_ext %>%
   mutate(
     smooth_pis = case_when(smooth_pis > 1 ~ 1, T ~ smooth_pis),
@@ -144,6 +136,71 @@ ggsave(plot = comp_plt,
        width = 7, height = 5,
        device = cairo_pdf)
 
+# Maharashtra length of lockdown -----------
+
+mh_unlock  <- pi_sched_ext_mh %>% filter(between(date, as.Date("2021-06-07"), as.Date("2021-07-31")))
+mh_4_weeks <- pi_sched_ext_mh %>% slice(1:(4*7)) %>% filter(date <= "2021-06-07")
+mh_6_weeks <- pi_sched_ext_mh %>% slice(1:(6*7)) %>% filter(date <= "2021-06-07")
+mh_8_weeks <- pi_sched_ext_mh %>% slice(1:(8*7)) %>% filter(date <= "2021-06-07") %>%
+  add_row() %>%
+  mutate(
+    date = seq.Date(from = as.Date("2021-04-14"), length.out = 8*7, by = "day"),
+    smooth_pis = data.table::nafill(smooth_pis, type = "locf")
+    )
+
+mh_4_weeks <- bind_rows(
+  mh_4_weeks,
+  mh_unlock %>%
+    mutate(smooth_pis = smooth_pis * ((last(mh_4_weeks$smooth_pis)) / (first(mh_unlock$smooth_pis))))) %>%
+  mutate(nom = 1:nrow(.)) %>%
+  mutate(smooth_pis = predict(loess(smooth_pis ~ nom, span = 0.5))) %>%
+  mutate(scenario = "Maharashtra 4 weeks", place = "Maharashtra 4 weeks")
+
+mh_6_weeks <- bind_rows(
+  mh_6_weeks,
+  mh_unlock %>%
+    mutate(smooth_pis = smooth_pis * ((last(mh_6_weeks$smooth_pis)) / (first(mh_unlock$smooth_pis))))) %>%
+  mutate(nom = 1:nrow(.)) %>%
+  mutate(smooth_pis = predict(loess(smooth_pis ~ nom, span = 0.5))) %>%
+  mutate(scenario = "Maharashtra 6 weeks", place = "Maharashtra 6 weeks")
+
+mh_8_weeks <- bind_rows(
+  mh_8_weeks,
+  mh_unlock %>%
+    mutate(smooth_pis = smooth_pis * ((last(mh_8_weeks$smooth_pis)) / (first(mh_unlock$smooth_pis))))) %>%
+  mutate(nom = 1:nrow(.)) %>%
+  mutate(smooth_pis = predict(loess(smooth_pis ~ nom, span = 0.5))) %>%
+  mutate(scenario = "Maharashtra 8 weeks", place = "Maharashtra 8 weeks")
+
+pi_sched_ext_lol <- bind_rows(
+  mh_4_weeks,
+  mh_6_weeks,
+  mh_8_weeks
+)
+
+lol_comp_plt <- pi_sched_ext_lol %>%
+  ggplot(aes(x = nom, y = smooth_pis, color = scenario, group = scenario)) +
+  geom_line(size = 1) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(
+    title = "Comparison of lenth of lockdown schedules",
+    x     = "Day",
+    y     = "Pi",
+    caption = "All schedules are based on full 200-day Maharashtra lockdown.<br>Schedules are truncated for lockdown (with LOCF for 8 weeks) and then append unlock portion of schedule.<br>These stictched schedules are LOESS smoothed (span = 0.5)."
+  ) +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Lato"),
+    legend.title = element_blank(),
+    legend.position = "top",
+    plot.caption = element_markdown(hjust = 0),
+    plot.title = element_text(face = "bold")
+  )
+ggsave(plot = lol_comp_plt,
+       filename = here("fig", "diagnostic", glue("{location}_lol_pi_comp.pdf")),
+       width = 7, height = 5,
+       device = cairo_pdf)
+
 # Maharashtra early intervention -----------
 location   <- "Maharashtra"
 start_proj <- as.Date("2021-03-28")
@@ -167,12 +224,12 @@ pi_sched_ext <- dat %>%
     smooth_pis = predict(loess(pis ~ nom, span = 1))
   )
 
-pi_sched_ext_mh <- pi_sched_ext %>%
-  mutate(
-    smooth_pis = case_when(smooth_pis > 1 ~ 1, T ~ smooth_pis),
-    scenario_dates = glue("{format(start_proj, '%b %d')} - {format(end_proj, '%b %d')}, {format(end_proj, '%Y')}"),
-    scenario = "Maharashtra pre-lockdown"
-  )
+# pi_sched_early_mh <- pi_sched_ext %>%
+#   mutate(
+#     smooth_pis = case_when(smooth_pis > 1 ~ 1, T ~ smooth_pis),
+#     scenario_dates = glue("{format(start_proj, '%b %d')} - {format(end_proj, '%b %d')}, {format(end_proj, '%Y')}"),
+#     scenario = "Maharashtra pre-lockdown"
+#   )
 
 pi_sched_early_mh <- tibble(
   date = seq.Date(from = start_proj, length.out = 100, by = "day"),
@@ -180,20 +237,41 @@ pi_sched_early_mh <- tibble(
   mutate(
     smooth_pis     = predict(loess(pis ~ as.numeric(date), span = 1)),
     place          = "Maharashtra early",
+    scenario       = "Maharashtra early",
     scenario_dates = glue("{format(start_proj, '%b %d')} - {format(end_proj, '%b %d')}, {format(end_proj, '%Y')}"),
     nom            = 1:100
     )
   
-pi_sched_early_mh %>%
-  ggplot(aes(x = date, y= smooth_pis)) +
-  geom_line(size = 1) +
-  theme_minimal()
+pre_lock_plt <- pi_sched_early_mh %>%
+  mutate(smooth_pis_20pct = ifelse(smooth_pis * 1.2 > 1, 1, smooth_pis * 1.2)) %>%
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = smooth_pis), size = 1, color = "blue") +
+  geom_line(aes(y =  smooth_pis_20pct), size = 1, color = "red") +
+  labs(
+    title = glue("Comparison of {location} pre-lockdown pi schedules"),
+    x     = "Date",
+    y     = "Pi",
+    caption = "Both schedules start on March 28, 2021 and go to April 14, 2021.<br>Blue line is smooth observed schedule (March 28 - April 14, locf up to 100 days then smoothed).<br>Red line is blue line increased by 20%"
+    ) +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Lato"),
+    legend.title = element_blank(),
+    legend.position = "top",
+    plot.caption = element_markdown(hjust = 0),
+    plot.title = element_text(face = "bold")
+  )
 
+ggsave(plot = pre_lock_plt,
+       filename = here("fig", "diagnostic", glue("{location}_pi_prelock.pdf")),
+       width = 7, height = 5,
+       device = cairo_pdf)
 
 # combine ------------
 pi_ext_comb <- bind_rows(
   pi_sched_ext_ind,
   pi_sched_ext_mh,
+  pi_sched_ext_lol,
   pi_sched_early_mh
 )
 
