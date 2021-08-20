@@ -15,11 +15,11 @@ set.seed(20192020) # default: 20192020
 
 # Set variables based on testing or production
 if (Sys.getenv("production") == "TRUE") { 
-  data_repo <- "~/projects/science_revision/data/"
+  data_repo <- "~/projects/science_revision/data/early_intervention/"
   Ms        <- 5e5    # 5e5 recommended (5e3 for testing - but not stable)
   nburnins  <- 2e5    # 2e5 recommended (2e3 for testing - but not stable)
 } else {
-  data_repo <- "~/projects/science_revision/test/"
+  data_repo <- "~/projects/science_revision/test/early_intervention/"
   Ms        <- 5e3    # 5e5 recommended (5e3 for testing - but not stable)
   nburnins  <- 2e3    # 2e5 recommended (2e3 for testing - but not stable)
 }

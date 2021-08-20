@@ -15,7 +15,7 @@ export ftp_proxy=http://proxy.arc-ts.umich.edu:3128/
 export HTTPS_PROXY=http://proxy.arc-ts.umich.edu:3128/
 export https_proxy=http://proxy.arc-ts.umich.edu:3128/
 export HTTP_PROXY=http://proxy.arc-ts.umich.edu:3128/
-export production=TRUE
+export production=FALSE
 
 module load Rgeospatial/3.6.1-2019-09-29
 module load jags
