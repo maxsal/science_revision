@@ -99,7 +99,7 @@ if (arrayid == 1) {
 if (arrayid == 2) {
   
   message("pre-lockdown start date (early MH + 20%): January 1, 2021")
-  last_obs   <- as.Date("2021-03-29")
+  last_obs   <- as.Date("2021-01-01")
   start_obs  <- last_obs - 99
   start_proj <- last_obs + 1
   last_proj  <- last_obs + 200
@@ -120,9 +120,9 @@ if (arrayid == 2) {
   
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
-  casename   <- glue("{last_obs + 1}_smooth{span}")
+  casename   <- glue("{last_obs + 1}_20pct_smooth{span}")
   
-  march30_mod <- tvt.eSIR(
+  jan01_20pct_mod <- tvt.eSIR(
     Y,
     R,
     begin_str      = format(start_obs, "%m/%d/%Y"),
@@ -140,7 +140,7 @@ if (arrayid == 2) {
     nburnin        = nburnins
   )
   
-  clean_out <- march30_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "March 30")   
+  clean_out <- jan01_20pct_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown + 20%")   
   write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
   write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
   
