@@ -70,7 +70,7 @@ if (arrayid == 1) {
   
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
-  casename   <- glue("{last_obs + 1}_smooth{span}")
+  casename   <- glue("{last_obs + 1}_smooth{span}_mh")
   
   march15_mod <- tvt.eSIR(
     Y,
@@ -117,7 +117,7 @@ if (arrayid == 2) {
   
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
-  casename   <- glue("{last_obs + 1}_smooth{span}")
+  casename   <- glue("{last_obs + 1}_smooth{span}_mh")
   
   march30_mod <- tvt.eSIR(
     Y,
@@ -162,7 +162,7 @@ if (arrayid == 3) {
   R           <- unlist(RI_complete/N)           # proportion of recovered per day
   Y           <- unlist(NI_complete/N-R)
   
-  casename   <- glue("no_intervention_smooth{span}")
+  casename   <- glue("no_intervention_smooth{span}_mh")
   
   no_int_mod <- tvt.eSIR(
     Y,
