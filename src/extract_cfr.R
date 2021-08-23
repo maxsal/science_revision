@@ -91,7 +91,7 @@ get_plt_def <- function(mh, kl) {
 }
 
 # clean scenario data -----------
-clean_scenario <- function(dat, p, stop_obs, scen) {
+clean_scenario <- function(dat, p, stop_obs, scen, end_date = "2021-05-15") {
   dat %>% 
     filter(date <= stop_obs) %>% 
     select(date, daily_cases) %>% 
@@ -101,7 +101,7 @@ clean_scenario <- function(dat, p, stop_obs, scen) {
               select(date, incidence) %>% 
               drop_na()) %>% 
     add_column(scenario = scen) %>%
-    filter(date <= "2021-05-15")
+    filter(date <= end_date)
 }
 
 # clean scenario data for cfr -----------
