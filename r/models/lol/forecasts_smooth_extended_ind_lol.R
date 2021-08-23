@@ -180,7 +180,8 @@ if (arrayid == 3) {
     arrange(date) %>%
     pull(smooth_pis) %>%
     c(1, .)%>%
-    head(., -1)
+    head(., -1) %>%
+    .[1:(length(seq.Date(from = start_proj, to = last_proj, by = "day")))]
   
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
@@ -351,7 +352,8 @@ if (arrayid == 6) {
     arrange(date) %>%
     pull(smooth_pis) %>%
     c(1, .)%>%
-    head(., -1)
+    head(., -1) %>%
+    .[1:(length(seq.Date(from = start_proj, to = last_proj, by = "day")))]
   
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
