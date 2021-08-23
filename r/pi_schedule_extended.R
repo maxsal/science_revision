@@ -74,6 +74,72 @@ ggsave(plot = comp_plt,
        width = 7, height = 5,
        device = cairo_pdf)
 
+# India length of lockdown ----------
+ind_unlock   <- pi_sched_ext_ind %>% filter(between(date, as.Date("2020-06-01"), as.Date("2020-10-31")))
+ind_6_weeks  <- pi_sched_ext_ind %>% slice(1:(6*7)) %>% filter(date <= "2020-06-01")
+ind_9_weeks  <- pi_sched_ext_ind %>% slice(1:(9*7)) %>% filter(date <= "2020-06-01")
+ind_12_weeks <- pi_sched_ext_ind %>% slice(1:(12*7)) %>% filter(date <= "2020-06-01") %>%
+  bind_rows(
+    tibble(date = NA, smooth_pis = NA, .rows = (12*7) - nrow(.))
+  ) %>%
+  mutate(
+    date = seq.Date(from = start_proj, length.out = 12*7, by = "day"),
+    smooth_pis = data.table::nafill(smooth_pis, type  = "locf")
+  )
+
+ind_6_weeks <- bind_rows(
+  ind_6_weeks,
+  ind_unlock %>%
+    mutate(smooth_pis = smooth_pis * ((last(ind_6_weeks$smooth_pis)) / (first(ind_unlock$smooth_pis))))) %>%
+  mutate(nom = 1:nrow(.)) %>%
+  mutate(smooth_pis = predict(loess(smooth_pis ~ nom, span = 0.5))) %>%
+  mutate(scenario = "India 6 weeks", place = "India 6 weeks")
+
+ind_9_weeks <- bind_rows(
+  ind_9_weeks,
+  ind_unlock %>%
+    mutate(smooth_pis = smooth_pis * ((last(ind_9_weeks$smooth_pis)) / (first(ind_unlock$smooth_pis))))) %>%
+  mutate(nom = 1:nrow(.)) %>%
+  mutate(smooth_pis = predict(loess(smooth_pis ~ nom, span = 0.5))) %>%
+  mutate(scenario = "India 9 weeks", place = "India 9 weeks")
+
+ind_12_weeks <- bind_rows(
+  ind_12_weeks,
+  ind_unlock %>%
+    mutate(smooth_pis = smooth_pis * ((last(ind_12_weeks$smooth_pis)) / (first(ind_unlock$smooth_pis))))) %>%
+  mutate(nom = 1:nrow(.)) %>%
+  mutate(smooth_pis = predict(loess(smooth_pis ~ nom, span = 0.5))) %>%
+  mutate(scenario = "India 12 weeks", place = "India 12 weeks")
+
+pi_sched_ext_lol_ind <- bind_rows(
+  ind_6_weeks,
+  ind_9_weeks,
+  ind_12_weeks
+)
+
+lol_comp_plt <- pi_sched_ext_lol_ind %>%
+  ggplot(aes(x = nom, y = smooth_pis, color = scenario, group = scenario)) +
+  geom_line(size = 1) +
+  scale_color_brewer(palette = "Dark2") +
+  labs(
+    title = "Comparison of India lenth of lockdown schedules",
+    x     = "Day",
+    y     = "Pi",
+    caption = "All schedules are based on full 200-day India lockdown.<br>Schedules are truncated for lockdown (with LOCF for 12 weeks) and then append unlock portion of schedule.<br>These stictched schedules are LOESS smoothed (span = 0.5)."
+  ) +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Lato"),
+    legend.title = element_blank(),
+    legend.position = "top",
+    plot.caption = element_markdown(hjust = 0),
+    plot.title = element_text(face = "bold")
+  )
+ggsave(plot = lol_comp_plt,
+       filename = here("fig", "diagnostic", glue("{location}_lol_pi_comp.pdf")),
+       width = 7, height = 5,
+       device = cairo_pdf)
+
 # Maharashtra lockdown 200-day-------------
 location   <- "Maharashtra"
 start_proj <- as.Date("2021-04-14")
@@ -270,6 +336,7 @@ ggsave(plot = pre_lock_plt,
 # combine ------------
 pi_ext_comb <- bind_rows(
   pi_sched_ext_ind,
+  pi_sched_ext_lol_ind,
   pi_sched_ext_mh,
   pi_sched_ext_lol,
   pi_sched_early_mh
