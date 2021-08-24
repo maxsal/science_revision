@@ -20,4 +20,4 @@ export production=FALSE
 module load Rgeospatial/3.6.1-2019-09-29
 module load jags
 
-Rscript --vanilla ~/projects/science_revision/forecasts_smooth_extended_lol.R
+Rscript --vanilla ~/projects/science_revision/r/models/lol/forecasts_smooth_extended_lol.R
