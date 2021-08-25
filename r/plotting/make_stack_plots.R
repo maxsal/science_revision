@@ -95,13 +95,13 @@ make_r_count_stack_plots <- function(place, start_date = "2021-01-01", end_date 
       scale_x_date(date_labels = "%B %Y") +
       labs(
         x = "Date",
-        y = "Pi"
+        y = "\u03c0(t)"
       )
     
-    patched <- r_plt / case_plt / pi_plt
+    patched <- case_plt / r_plt / pi_plt
   
   } else {
-    patched <- r_plt / case_plt
+    patched <- case_plt / r_plt
   }
   
   
