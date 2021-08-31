@@ -1,6 +1,6 @@
-extract_cfr <- function() {
+extract_cfr <- function(start_date = "2021-02-15") {
   
-  message("pulling time series from covid19india...")
+  cli::cli_alert_info("pulling time series from covid19india...")
   d <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
                 col_types = cols()) %>%
     clean_names() %>%
@@ -9,7 +9,7 @@ extract_cfr <- function() {
            total_cases = total_confirmed, total_deaths = total_deceased, 
            everything())
 
-  message("extracting Kerala CFR...")
+  cli::cli_alert_info("extracting Kerala CFR...")
     taco_kl <- read_csv("https://api.covid19india.org/csv/latest/state_wise_daily.csv",
                      col_types = cols()) %>%
       clean_names() %>%
@@ -26,7 +26,7 @@ extract_cfr <- function() {
       mutate(cfr_kl_t7 = zoo::rollmean(cfr_kl, k = 7, fill = NA, align = "right"))
     d <- d %>% left_join(taco_kl %>% select(date, cfr_kl, cfr_kl_t7), by = "date")
     
-    message("extracting Maharashtra CFR...")
+    cli::cli_alert_info("extracting Maharashtra CFR...")
     taco <- read_csv("https://api.covid19india.org/csv/latest/state_wise_daily.csv",
                      col_types = cols()) %>%
       clean_names() %>%
@@ -43,13 +43,13 @@ extract_cfr <- function() {
       mutate(cfr_mh_t7 = zoo::rollmean(cfr_mh, k = 7, fill = NA, align = "right"))
     d <- d %>% left_join(taco %>% select(date, cfr_mh, cfr_mh_t7), by = "date")
     
-    message("extracting India CFR...")
+    cli::cli_alert_info("extracting India CFR...")
     d <- d  %>%
       mutate(cfr = daily_deaths / daily_cases) %>%
       mutate(cfr = ifelse(date == "2021-07-20", NA, cfr)) %>%
       mutate(cfr = data.table::nafill(cfr, type = "locf")) %>%
       mutate(cfr_t7 = zoo::rollmean(x = cfr, k = 7, fill = NA, align = "right")) %>%
-      filter(date >= "2021-02-15")
+      filter(date >= start_date)
   
   return(d)
   

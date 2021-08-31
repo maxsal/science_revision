@@ -4,7 +4,7 @@
 #SBATCH --time=0-20:00:00
 #SBATCH --job-name=wave2_ext_mh_prod
 #SBATCH --mem-per-cpu=40G
-#SBATCH --array=1-3
+#SBATCH --array=1-4
 #SBATCH --output=/home/%u/slurm_output/slurm-%A_%a.out
 #SBATCH --account=covid19_project1
 #SBATCH --partition=standard
@@ -20,4 +20,4 @@ export production=TRUE
 module load Rgeospatial/3.6.1-2019-09-29
 module load jags
 
-Rscript --vanilla ~/projects/science_revision/forecasts_smooth_extended_mh.R
+Rscript --vanilla ~/projects/science_revision/r/models/early_lockdown/forecasts_smooth_extended_mh.R

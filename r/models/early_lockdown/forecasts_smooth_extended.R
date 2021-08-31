@@ -185,3 +185,50 @@ if (arrayid == 3) {
   write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
   
 }
+
+if (arrayid == 4) {
+  
+  message("lockdown start date: April 15, 2021")
+  last_obs   <- as.Date("2021-04-14")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_smooth{span}")
+  
+  apr15_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    R0             = R_0,
+    dic            = TRUE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- march30_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "April 15")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}

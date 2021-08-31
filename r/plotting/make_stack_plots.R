@@ -37,6 +37,7 @@ make_r_count_stack_plots <- function(place, start_date = "2021-01-01", end_date 
     scale_y_continuous(labels = scales::comma) +
     scale_x_date(date_labels = "%B %Y") +
     labs(
+      title = "Daily case count",
       x = "Date",
       y = "Daily case count"
     )
@@ -57,7 +58,7 @@ make_r_count_stack_plots <- function(place, start_date = "2021-01-01", end_date 
     geom_point(size = 0.25, shape = 3) +
     scale_x_date(date_labels = "%B %Y") +
     labs(
-      x = "Date", y = "R(t)"
+      title = "Time-varying R", x = "Date", y = "R(t)"
     )
   
   if (tolower(place) != "maharashtrah") {
@@ -94,6 +95,7 @@ make_r_count_stack_plots <- function(place, start_date = "2021-01-01", end_date 
       scale_y_continuous(labels = scales::comma) +
       scale_x_date(date_labels = "%B %Y") +
       labs(
+        title = "Intervention schedule",
         x = "Date",
         y = "\u03c0(t)"
       )
@@ -106,7 +108,18 @@ make_r_count_stack_plots <- function(place, start_date = "2021-01-01", end_date 
   
   
   return(
-    patched + patchwork::plot_annotation(title = glue::glue("{place}"))
+    patched + patchwork::plot_annotation(title = glue::glue("{place}"),
+                                         tag_levels = c("A")
+    ) &
+      theme(
+        text              = element_text(family = "Lato"),
+        plot.title        = element_text(size = 14, face = "bold"),
+        plot.subtitle     = element_text(size = 12, hjust = 0, color = "gray40"),
+        plot.caption      = element_markdown(size = 8, hjust = 0),
+        plot.tag.position = c(0, 1),
+        plot.tag          = element_text(size = 14, hjust = 0, vjust = 1, family = "Lato", face = "bold")
+      )
+    
   )
   
 }
@@ -119,7 +132,7 @@ save_plot <- function(plot, path, w = 7, h = 5) {
   
 }
 
-make_r_count_stack_plots(place = "Maharashtra", mark_dates = c("2021-02-18", "2021-03-28", "2021-04-14", "2021-06-07"), start_date = "2021-03-01", end_date = "2021-07-31") %>% save_plot(path = here("fig", "stack_plots", "maharashtra_stack_plot_marked.pdf"))
+make_r_count_stack_plots(place = "Maharashtra", mark_dates = c("2021-02-18", "2021-03-28", "2021-04-14", "2021-06-07"), start_date = "2021-03-01", end_date = "2021-07-31") %>% save_plot(path = here("fig", "stack_plots", "maharashtra_stack_plot_marked.pdf"), h = 6)
 
 make_r_count_stack_plots(place = "India") %>% save_plot(path = here("fig", "stack_plots", "india_stack_plot.pdf"))
  

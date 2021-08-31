@@ -5,7 +5,7 @@ source(here("src", "extract_cfr.R"))
 end_date <- as.Date("2021-06-30")
 
 # # use maharashtra pi schedule? use kerala cfr schedule? ----------
-mh <- TRUE
+mh <- FALSE
 if (mh == TRUE) {
   tmp_outname <- "fig02_death_plot.pdf"
   plt_title   <- "Predicted number of daily COVID-19 deaths under moderate lockdown effect"

@@ -2,9 +2,10 @@
 pacman::p_load(tidyverse, here, glue, patchwork, ggtext, janitor)
 source(here("src", "extract_cfr.R"))
 
-end_date <- as.Date("2021-08-15")
+end_date <- as.Date("2021-06-30")
 
 cols_1 <- c(
+  "Early non-lockdown\nintervention" = "#000080",
   "Strong effect"   = "#138808",
   "Moderate effect" = "#FF9933"
 )
@@ -18,11 +19,12 @@ cols_2 <- c(
 # load data ----------
 pis <- read_tsv(here("pi_schedule_extended.txt"),
                 col_types = cols()) %>%
-  filter(place %in% c("India", "Maharashtra")) %>%
+  filter(place %in% c("India", "Maharashtra", "Maharashtra early")) %>%
   mutate(
     place = case_when(
       place == "India" ~ "Strong effect",
-      place == "Maharashtra" ~ "Moderate effect"
+      place == "Maharashtra" ~ "Moderate effect",
+      place == "Maharashtra early" ~ "Early non-lockdown\nintervention"
     )
   )
 
@@ -49,9 +51,9 @@ pi_plt <- pis %>%
   geom_hline(yintercept = 1, linetype = 2, color = "gray40") +
   geom_line(size = 1) +
   labs(
-    title   = "Lockdown intervention schedules",
+    title   = "Intervention schedules",
     x       = "Days since start of intervention",
-    y       = "Pi(t)",
+    y       = "\u03c0(t)",
     caption = "Note: Dashed line represents no change to pi schedule"
   ) +
   scale_color_manual(values = cols_1) +
@@ -77,7 +79,7 @@ cfr_plt <- cfrs %>%
     title   = "CFR schedules",
     x       = "Date",
     y       = "Case-fatality rate (CFR)",
-    caption = "Note: February 15, 2021 to May 15, 2021"
+    caption = glue::glue("Note: February 15, 2021 to {format(end_date, '%B %e, %Y')}")
   ) +
   scale_y_continuous(labels = scales::percent) +
   scale_x_date(date_labels = "%B") +
