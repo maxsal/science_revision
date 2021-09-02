@@ -76,11 +76,11 @@ peaks <- dat |>
   select(place, w1_order, w1_peak_date, w1_peak_daily_cases, w1_total_cases,
          w2_order, w2_peak_date, w2_peak_daily_cases, w2_total_cases,
          pct_cases_w2) |>
-  # left_join(read_csv(here("data", "metrics_2021_06_04.csv"), col_types = cols()),
-  #           by = c("place" = "State")) |>
+  left_join(read_csv(here("data", "wave_tiers.csv"), col_types = cols()) %>% select(place, case_metric, case_tier),
+            by = "place") |>
   invisible()
 
-write_tsv(x = peaks, file = here("data", "output", "case_peaks_by_state_table.txt"))
+write_csv(x = peaks, file = here("data", "case_peaks_by_state_table.csv"))
 
 
 # deaths -----------
@@ -155,14 +155,14 @@ peaks_d <- dat |> get_d_peaks() |>
   select(place, w1_order, w1_peak_date, w1_peak_daily_deaths, w1_total_deaths,
          w2_order, w2_peak_date, w2_peak_daily_deaths, w2_total_deaths,
          pct_deaths_w2) |>
-  left_join(read_csv(here("data", "metrics_2021_06_04.csv"), col_types = cols()),
-            by = c("place" = "State")) |>
+  left_join(read_csv(here("data", "wave_tiers.csv"), col_types = cols()) %>% select(place, death_metric, death_tier),
+            by = "place") |>
   janitor::clean_names()
   # # dplyr::filter(w1_peak_daily_deaths > 10) |>
   # dplyr::group_by(place) |>
   # dplyr::filter(w1_peak_date == min(w1_peak_date))
 
-write_tsv(x = peaks_d, file = here("data", "output", "death_peaks_by_state_table.txt"))
+write_csv(x = peaks_d, file = here("data", "death_peaks_by_state_table.csv"))
 
 
 
