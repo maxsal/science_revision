@@ -1,6 +1,7 @@
 # libraries ----------
 pacman::p_load(tidyverse, lubridate, ggsci, ggrepel, janitor, glue, here, ggtext, patchwork)
-source(here("src", "extract_cfr.R"))
+f <- list.files(here("src"))
+for (i in seq_along(f)) {source(here("src", f[i]))}
 
 end_date <- as.Date("2021-06-30")
 
@@ -9,9 +10,13 @@ mh <- FALSE
 if (mh == TRUE) {
   tmp_outname <- "fig02_death_plot.pdf"
   plt_title   <- "Predicted number of daily COVID-19 deaths under moderate lockdown effect"
+  cols <- c(colores[["Observed"]], colores[["MH Pre-lock"]], colores[["Moderate lockdown"]])
+  names(cols)[names(cols) == "MH Pre-lock"] <- "Early intervention"
 } else {
   tmp_outname <- "fig03_death_plot.pdf"
   plt_title   <- "Predicted number of daily COVID-19 deaths under strong lockdown effect"
+  cols <- c(colores[["Observed"]], colores[["MH Pre-lock"]], colores[["Strong lockdown"]])
+  names(cols)[names(cols) == "MH Pre-lock"] <- "Early intervention"
 }
 
 
@@ -70,7 +75,7 @@ p <- p %>%
   ) %>%
   drop_na(incidence)
 
-ei <- read_tsv(here("data", "early_intervention", "2021-01-02_smooth1_data.txt"),
+ei <- read_tsv(here("data", "early_intervention", "2021-01-02_20pct_smooth1_data.txt"),
                show_col_types = FALSE) %>%
   mutate(scenario = "Early intervention") %>%
   drop_na(incidence)
@@ -166,7 +171,8 @@ death_plt <- function(dat, title,
   deaths_p <- dat %>% 
   ggplot() + 
   geom_line(aes(x = date, y = fitted, color = scenario), size = 1) +
-  scale_colour_lancet() + 
+    scale_color_manual(values = cols) +
+  # scale_colour_lancet() + 
   xlab("Date") + 
   ylab("Daily deaths") + 
   geom_vline(data = dat %>% 

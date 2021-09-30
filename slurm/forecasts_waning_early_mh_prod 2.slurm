@@ -3,7 +3,7 @@
 #SBATCH --mail-type=END
 #SBATCH --time=0-20:00:00
 #SBATCH --job-name=early_mh_prod
-#SBATCH --mem-per-cpu=840
+#SBATCH --mem-per-cpu=40G
 #SBATCH --array=1-2
 #SBATCH --output=/home/%u/slurm_output/slurm-%A_%a.out
 #SBATCH --account=covid19_project1

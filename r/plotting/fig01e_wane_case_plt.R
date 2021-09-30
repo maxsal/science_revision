@@ -3,7 +3,6 @@ pacman::p_load(tidyverse, lubridate, ggsci, ggrepel, janitor, glue, here,
                ggtext, patchwork)
 f <- list.files(here("src"))
 for (i in seq_along(f)) {source(here("src", f[i]))}
-# source(here("src", "extract_cfr.R"))
 
 end_date <- as.Date("2021-06-30")
 
@@ -21,11 +20,11 @@ obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
   rename(date = date_ymd) %>%
   filter(date >= "2021-02-15")
 
-scenarios <- c("2021-03-15", "2021-03-30", "no_intervention")
+scenarios <- c("2021-03-15", "2021-03-30")
 
 for (i in seq_along(scenarios)) {
-  tmp_filename    <- glue("{scenarios[i]}_smooth1_data.txt")
-  tmp_mh_filename <- glue("{scenarios[i]}_smooth1_mh_data.txt")
+  tmp_filename    <- glue("{scenarios[i]}_waning_data.txt")
+  tmp_mh_filename <- glue("{scenarios[i]}_waning_mh_data.txt")
   if (i == 1) {
     p <- read_tsv(here("data", "early_lockdown",
                        tmp_filename),
@@ -53,10 +52,10 @@ for (i in seq_along(scenarios)) {
   
 }
 
-p_e <- read_tsv(here("data", "early_intervention", "2021-01-02_20pct_smooth1_data.txt")) %>%
+p_e <- read_tsv(here("data", "early_intervention", "2021-01-02_20pct_waning_data.txt")) %>%
   mutate(scenario = "MH Pre-lock")
 
-tmp_outname  <- "fig01_case_plot.pdf"
+tmp_outname  <- "fig01_wane_case_plot.pdf"
 tmp_title    <- "Strong lockdown effect"
 tmp_mh_title <- "Moderate lockdown effect"
 
@@ -79,7 +78,7 @@ p_mh <- p_mh %>%
 # prepare data ----------
 clean_prep <- function(x) {
   
-  none   <- obs %>% clean_scenario(p = x, stop_obs = end_date, end_date = end_date, scen = "No intervention")
+  none   <- obs %>% mutate(scenario = "No intervention") %>% select(scenario, date, incidence = daily_cases)
   mar_15 <- obs %>% clean_scenario(p = x, stop_obs = "2021-03-15", end_date = end_date, scen = "March 15")
   mar_30 <- obs %>% clean_scenario(p = x, stop_obs = "2021-03-30", end_date = end_date, scen = "March 30")
   
@@ -172,6 +171,7 @@ total_smoothed_plot <- bind_rows(
 
 # plot -----------
 strong_cols <- c(colores[["Observed"]], colores[["MH Pre-lock"]], colores[["Strong lockdown"]])
+
 
 ## strong lockdown plot -----------
 cases_p <- total_smoothed_plot %>%
@@ -279,8 +279,6 @@ cases_p <- total_smoothed_plot %>%
   )
 
 ## moderate lockdown plot ----------
-mod_cols <- c(colores[["Observed"]], colores[["MH Pre-lock"]], colores[["Moderate lockdown"]])
-
 total_mh_smoothed_plot <- bind_rows(
   bind_rows(
     total_smoothed_plot_e %>% filter(scenario == "Observed") %>% filter(date <= "2021-03-27"),
@@ -289,12 +287,15 @@ total_mh_smoothed_plot <- bind_rows(
   total_smoothed_plot_e %>% filter(scenario != "Observed")
 )
 
+
+mod_cols <- c(colores[["Observed"]], colores[["MH Pre-lock"]], colores[["Moderate lockdown"]])
+
 cases_p_mh <- total_mh_smoothed_plot %>%
   filter(date >= "2020-12-01" & date <= end_date) %>%
   ggplot(aes(x = date, y = fitted)) + 
   geom_line(aes(color = scenario), size = 1) +
-  # scale_color_lancet() + 
   scale_color_manual(values = mod_cols) +
+  # scale_color_lancet() + 
   geom_vline(data = total_smoothed_plot_e %>% 
                group_by(scenario) %>% 
                filter(date == min(date)) %>% 
@@ -398,7 +399,7 @@ patched <- cases_p / cases_p_mh
 
 full_plt <- patched +
   plot_annotation(
-    title    = "Predicted number of daily COVID-19 cases under various interventions",
+    title    = "Predicted number of daily COVID-19 cases under various interventions with waning immunity",
     subtitle = glue("December 1, 2020 to {format(end_date, '%B %e, %Y')}"),
     caption  = glue("**Notes:** Observations and prediction period until {format(end_date, '%B %e, %Y')}. ",
                     "Figures in boxes show peak number of cases for each intervention.<br>",

@@ -4,6 +4,9 @@ library(ggplot2)
 library(patchwork)
 library(here)
 
+f <- list.files(here("src"))
+for (i in seq_along(f)) {source(here("src", f[i]))}
+
 hosp_cap <- 1.9e6 / 1.366e9 * 10000 # beds per 10,000
 icu_cap  <- 95000 / 1.366e9 * 10000 # beds per 10,000
 
@@ -26,7 +29,7 @@ dat <- dat[, active_cases := (total_confirmed - total_recovered) / 10000][
   , `:=` (hosp_cases = active_cases * hosp_rate, icu_cases = active_cases * (hosp_rate * icu_rate), scenario = "Observed", date = as.Date(date))][]
 
 #### early intervention -----------
-load(here("data", "early_intervention", "2021-01-02_smooth1_mcmc.RData"))
+load(here("data", "early_intervention", "2021-01-02_20pct_smooth1_mcmc.RData"))
 
 pred_dat <- data.table(
   date   = seq.Date(from = as.Date("2021-01-02"), length.out = 199, by = "day"),
@@ -80,9 +83,9 @@ plot_dat <- rbindlist(
 ####
 
 cols <- c(
-  "Observed"           = "#000080",
-  "Early non-lockdown\nintervention\n(January 1)" = "#138808",
-  "Moderate lockdown\n(March 15)"  = "#FF9933"
+  "Observed"           = colores[["Observed"]][[1]],
+  "Early non-lockdown\nintervention\n(January 1)" = colores[["MH Pre-lock"]][[1]],
+  "Moderate lockdown\n(March 15)"  = colores[["Moderate lockdown"]][[2]]
 )
 
 hosp_plot <- plot_dat |>
@@ -91,8 +94,6 @@ hosp_plot <- plot_dat |>
   geom_hline(yintercept = hosp_cap, color = unity_col, size = 1) +
   geom_line(size = 1) +
   scale_color_manual(values = cols) +
-  geom_point(data = plot_dat[scenario == "Early non-lockdown\nintervention\n(January 1)"], size = 0.25, shape = 3, color = "black") +
-  geom_point(data = plot_dat[scenario == "Moderate lockdown\n(March 15)"], size = 0.25, shape = 3, color = "black") +
   annotate(geom = "text", label = glue::glue("{format(round(hosp_cap, 1), nsmall = 1)} hospital beds per 10,000"),
            x = as.Date(start_date), y = hosp_cap + 2, hjust = 0, color = unity_col, fontface = "bold") + 
   labs(
@@ -111,14 +112,14 @@ hosp_plot <- plot_dat |>
     plot.caption    = ggtext::element_markdown(hjust = 0)
   )
 
+hosp_plot
+
 icu_plot <- plot_dat |>
   ggplot(aes(x = date, y = icu_cases, group = scenario, color = scenario)) +
   geom_ribbon(data = plot_dat[icu_cases > icu_cap], aes (x = date, ymax = icu_cases), ymin = icu_cap, fill = "red", alpha = 0.4, color = NA) +
   geom_hline(yintercept = icu_cap, color = unity_col, size = 1) +
   geom_line(size = 1) +
   scale_color_manual(values = cols) +
-  geom_point(data = plot_dat[scenario == "Early non-lockdown\nintervention\n(January 1)"], size = 0.25, shape = 3, color = "black") +
-  geom_point(data = plot_dat[scenario == "Moderate lockdown\n(March 15)"], size = 0.25, shape = 3, color = "black") +
   annotate(geom = "text", label = glue::glue("{format(round(icu_cap, 1), nsmall = 1)} ICU beds per 10,000"),
            x = as.Date(start_date), y = icu_cap + .25, hjust = 0, color = unity_col, fontface = "bold") + 
   labs(

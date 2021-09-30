@@ -1,30 +1,40 @@
 # libraries and such -----------
 pacman::p_load(tidyverse, here, glue, patchwork, ggtext, janitor)
-source(here("src", "extract_cfr.R"))
+f <- list.files(here("src"))
+for (i in seq_along(f)) {source(here("src", f[i]))}
 
 end_date <- as.Date("2021-06-30")
 
 cols_1 <- c(
-  "Early non-lockdown\nintervention" = "#000080",
-  "Strong effect"   = "#138808",
-  "Moderate effect" = "#FF9933"
+  "Strengthened measures\n(non-lockdown)" = colores[["MH Pre-lock +20%"]][[1]],
+  "Stringent measures\n(non-lockdown)"    = colores[["MH Pre-lock"]][[2]],
+  "Moderate lockdown"                     = colores[["Moderate lockdown"]][[2]],
+  "Strong lockdown"                       = colores[["Strong lockdown"]][[2]]
 )
 
 cols_2 <- c(
-  "Moderate CFR" = "#138808",
-  "High CFR"     = "#FF9933",
-  "Low CFR"      = "#000080"
+  "Moderate CFR" = colores[["MH Pre-lock"]][[2]],
+  "High CFR"     = colores[["Moderate lockdown"]][[2]],
+  "Low CFR"      = colores[["MH Pre-lock +20%"]][[1]]
 )
 
 # load data ----------
 pis <- read_tsv(here("pi_schedule_extended.txt"),
-                col_types = cols()) %>%
-  filter(place %in% c("India", "Maharashtra", "Maharashtra early")) %>%
+                col_types = cols()) 
+
+mh20_pis <- pis %>% filter(place == "Maharashtra early") %>%
+  mutate(place = "MH Pre-lock +20%",
+         smooth_pis = ifelse(smooth_pis * 1.2 > 1, 1, smooth_pis * 1.2)
+         )
+
+pis <- bind_rows(pis, mh20_pis) %>%
+  filter(place %in% c("India", "Maharashtra", "Maharashtra early", "MH Pre-lock +20%")) %>%
   mutate(
     place = case_when(
-      place == "India" ~ "Strong effect",
-      place == "Maharashtra" ~ "Moderate effect",
-      place == "Maharashtra early" ~ "Early non-lockdown\nintervention"
+      place == "India" ~ "Strong lockdown",
+      place == "Maharashtra" ~ "Moderate lockdown",
+      place == "Maharashtra early" ~ "Stringent measures\n(non-lockdown)",
+      place == "MH Pre-lock +20%" ~ "Strengthened measures\n(non-lockdown)"
     )
   )
 
@@ -120,6 +130,6 @@ full_plt <- patched +
 
 ggsave(filename = here("fig", "fig_schedules.pdf"),
        plot     = full_plt,
-       height   = 5,
-       width    = 10,
+       height   = 6,
+       width    = 15,
        units = "in", device = cairo_pdf)
