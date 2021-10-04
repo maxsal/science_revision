@@ -4,7 +4,7 @@
 #SBATCH --time=0-20:00
 #SBATCH --job-name=wave2_ext_test
 #SBATCH --mem-per-cpu=8G
-#SBATCH --array=1-4
+#SBATCH --array=1-6
 #SBATCH --output=/home/%u/slurm_output/slurm-%A_%a.out
 #SBATCH --account=covid19_project1
 #SBATCH --partition=standard
