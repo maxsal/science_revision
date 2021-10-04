@@ -51,8 +51,8 @@ setwd(data_repo)
 # models ---------
 if (arrayid == 1) {
   
-  message("pre-lockdown start date: January 1, 2021")
-  last_obs   <- as.Date("2021-01-01")
+  message("pre-lockdown start date: February 19, 2021")
+  last_obs   <- as.Date("2021-02-18")
   start_obs  <- last_obs - 99
   start_proj <- last_obs + 1
   last_proj  <- last_obs + 200
@@ -68,11 +68,19 @@ if (arrayid == 1) {
   R           <- unlist(RI_complete/N)           # proportion of recovered per day
   Y           <- unlist(NI_complete/N-R)
   
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "Maharashtra early") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
   casename   <- glue("{last_obs + 1}_waning")
   
-  jan01_mod <- tvt.eSIR(
+  feb19_mod <- tvt.eSIR(
     Y,
     R,
     begin_str      = format(start_obs, "%m/%d/%Y"),
@@ -90,7 +98,7 @@ if (arrayid == 1) {
     nburnin        = nburnins
   )
   
-  clean_out <- jan01_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown")   
+  clean_out <- feb19_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown")   
   write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
   write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
   
@@ -115,14 +123,19 @@ if (arrayid == 2) {
   R           <- unlist(RI_complete/N)           # proportion of recovered per day
   Y           <- unlist(NI_complete/N-R)
   
-  use_these_pis <- use_these_pis * 1.2
-  use_these_pis[use_these_pis > 1] <- 1
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "MH Pre-lock +20%") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
   
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
   casename   <- glue("{last_obs + 1}_20pct_waning")
   
-  jan01_20pct_mod <- tvt.eSIR(
+  feb19_20pct_mod <- tvt.eSIR(
     Y,
     R,
     begin_str      = format(start_obs, "%m/%d/%Y"),
@@ -140,7 +153,7 @@ if (arrayid == 2) {
     nburnin        = nburnins
   )
   
-  clean_out <- jan01_20pct_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown + 20%")   
+  clean_out <- feb19_20pct_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown + 20%")   
   write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
   write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
   

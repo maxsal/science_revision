@@ -333,13 +333,42 @@ ggsave(plot = pre_lock_plt,
        width = 7, height = 5,
        device = cairo_pdf)
 
+# MH Pre-lock +20% ----------
+pi_sched_early_mh_20 <- pi_sched_early_mh %>%
+  mutate(
+    smooth_pis = ifelse(smooth_pis * 1.2 > 1, 1, smooth_pis * 1.2),
+    place      = "MH Pre-lock +20%",
+    scenario   = "MH Pre-lock +20%")
+
+pre_lock_20_plt <- pi_sched_early_mh_20 %>%
+  # mutate(smooth_pis_20pct = ifelse(smooth_pis * 1.2 > 1, 1, smooth_pis * 1.2)) %>%
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = smooth_pis), size = 1, color = "blue") +
+  # geom_line(aes(y =  smooth_pis_20pct), size = 1, color = "red") +
+  labs(
+    title = glue("Comparison of {location} pre-lockdown pi schedules"),
+    x     = "Date",
+    y     = "Pi",
+    caption = "Both schedules start on March 28, 2021 and go to April 14, 2021.<br>Blue line is smooth observed schedule (March 28 - April 14, locf up to 100 days then smoothed).<br>Red line is blue line increased by 20%"
+  ) +
+  theme_minimal() +
+  theme(
+    text = element_text(family = "Lato"),
+    legend.title = element_blank(),
+    legend.position = "top",
+    plot.caption = element_markdown(hjust = 0),
+    plot.title = element_text(face = "bold")
+  )
+
+
 # combine ------------
 pi_ext_comb <- bind_rows(
   pi_sched_ext_ind,
   pi_sched_ext_lol_ind,
   pi_sched_ext_mh,
   pi_sched_ext_lol,
-  pi_sched_early_mh
+  pi_sched_early_mh,
+  pi_sched_early_mh_20
 )
 
 write_tsv(x = pi_ext_comb, file = "pi_schedule_extended.txt")
