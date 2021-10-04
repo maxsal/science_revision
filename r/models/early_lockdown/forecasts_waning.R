@@ -38,19 +38,14 @@ dat <- read_csv("~/projects/science_revision/data_for_lockdown_extended.csv", co
   filter(date <= "2021-07-31")
 
 pi_sched  <- read_tsv("~/projects/science_revision/pi_schedule_extended.txt", col_types = cols())
-use_these_pis <- pi_sched %>%
-  select(-c(r_est)) %>%
-  dplyr::filter(place == use_sched) %>%
-  arrange(date) %>%
-  pull(smooth_pis) %>%
-  c(1, .)%>%
-  head(., -1)
 
 # models ----------
+
+# Tier III interventions -----------
 if (arrayid == 1) {
   
-  message("lockdown start date: March 15, 2021")
-  last_obs   <- as.Date("2021-03-14")
+  message("Tier III on Tier III start date: March 13, 2021")
+  last_obs   <- as.Date("2021-03-12")
   start_obs  <- last_obs - 99
   start_proj <- last_obs + 1
   last_proj  <- last_obs + 200
@@ -66,9 +61,17 @@ if (arrayid == 1) {
   R           <- unlist(RI_complete/N)           # proportion of recovered per day
   Y           <- unlist(NI_complete/N-R)
   
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "Maharashtra early") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
-  casename   <- glue("{last_obs + 1}_waning")
+  casename   <- glue("{last_obs + 1}_t3_waning")
   
   march15_mod <- tvt.eSIR(
     Y,
@@ -89,7 +92,7 @@ if (arrayid == 1) {
     nburnin        = nburnins
   )
   
-  clean_out <- march15_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "March 15")   
+  clean_out <- march15_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "March 13")   
   write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
   write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
   
@@ -97,8 +100,8 @@ if (arrayid == 1) {
 
 if (arrayid == 2) {
   
-  message("lockdown start date: March 30, 2021")
-  last_obs   <- as.Date("2021-03-29")
+  message("Tier III on Tier IV start date: March 19, 2021")
+  last_obs   <- as.Date("2021-03-18")
   start_obs  <- last_obs - 99
   start_proj <- last_obs + 1
   last_proj  <- last_obs + 200
@@ -114,9 +117,17 @@ if (arrayid == 2) {
   R           <- unlist(RI_complete/N)           # proportion of recovered per day
   Y           <- unlist(NI_complete/N-R)
   
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "Maharashtra early") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
-  casename   <- glue("{last_obs + 1}_waning")
+  casename   <- glue("{last_obs + 1}_t3_waning")
   
   march30_mod <- tvt.eSIR(
     Y,
@@ -137,60 +148,17 @@ if (arrayid == 2) {
     nburnin        = nburnins
   )
   
-  clean_out <- march30_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "March 30")   
+  clean_out <- march30_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "March 19")   
   write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
   write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
   
 }
 
+# Tier IV interventions -----------
 if (arrayid == 3) {
   
-  message("no intervention")
-  last_obs   <- today - 1
-  start_obs  <- last_obs - 99
-  start_proj <- last_obs + 1
-  last_proj  <- last_obs + 120
-  proj_days  <- as.numeric(last_proj - start_proj) - 1
-  esir_days  <- as.numeric(last_proj - start_obs)
-  
-  d <- dat %>%
-    filter(place == "India" & date >= start_obs & date <= last_obs)
-  
-  NI_complete <- d$cases
-  RI_complete <- d$recovered + d$deaths
-  N           <- 1.34e9                          # population of India
-  R           <- unlist(RI_complete/N)           # proportion of recovered per day
-  Y           <- unlist(NI_complete/N-R)
-  
-  casename   <- glue("no_intervention_waning")
-  
-  no_int_mod <- tvt.eSIR(
-    Y,
-    R,
-    begin_str      = format(start_obs, "%m/%d/%Y"),
-    death_in_R     = 0.2,
-    T_fin          = esir_days,
-    rayleigh       = rayleigh,
-    sigma0         = sigma0,
-    dic            = FALSE,
-    casename       = casename,
-    save_files     = save_files,
-    save_mcmc      = save_mcmc,
-    save_plot_data = save_plot_data,
-    M              = Ms,
-    nburnin        = nburnins
-  )
-  
-  clean_out <- no_int_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "No intervention")   
-  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
-  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
-  
-}
-
-if (arrayid == 4) {
-  
-  message("lockdown start date: April 15, 2021")
-  last_obs   <- as.Date("2021-04-14")
+  message("Tier IV on Tier III start date: March 13, 2021")
+  last_obs   <- as.Date("2021-03-12")
   start_obs  <- last_obs - 99
   start_proj <- last_obs + 1
   last_proj  <- last_obs + 200
@@ -206,11 +174,19 @@ if (arrayid == 4) {
   R           <- unlist(RI_complete/N)           # proportion of recovered per day
   Y           <- unlist(NI_complete/N-R)
   
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "Maharashtra") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
-  casename   <- glue("{last_obs + 1}_waning")
+  casename   <- glue("{last_obs + 1}_t4_waning")
   
-  apr15_mod <- tvt.eSIR(
+  march13_mod <- tvt.eSIR(
     Y,
     R,
     begin_str      = format(start_obs, "%m/%d/%Y"),
@@ -229,7 +205,177 @@ if (arrayid == 4) {
     nburnin        = nburnins
   )
   
-  clean_out <- apr15_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "April 15")   
+  clean_out <- march13_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "March 13")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}
+
+if (arrayid == 4) {
+  
+  message("Tier IV on Tier IV start date: March 19, 2021")
+  last_obs   <- as.Date("2021-03-18")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "Maharashtra") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_t4_waning")
+  
+  march19_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    rayleigh       = rayleigh,
+    sigma0         = sigma0,
+    dic            = FALSE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- march19_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "March 19")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}
+
+# Tier V interventions -----------
+# Tier IV interventions -----------
+if (arrayid == 5) {
+  
+  message("Tier V on Tier III start date: March 13, 2021")
+  last_obs   <- as.Date("2021-03-12")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "India") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_t5_waning")
+  
+  march13_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    rayleigh       = rayleigh,
+    sigma0         = sigma0,
+    dic            = FALSE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- march13_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "March 13")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}
+
+if (arrayid == 6) {
+  
+  message("Tier V on Tier IV start date: March 19, 2021")
+  last_obs   <- as.Date("2021-03-18")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "India") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_t5_waning")
+  
+  march19_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    rayleigh       = rayleigh,
+    sigma0         = sigma0,
+    dic            = FALSE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- march19_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "March 19")   
   write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
   write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
   
