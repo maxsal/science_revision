@@ -29,10 +29,11 @@ dat <- dat[, active_cases := (total_confirmed - total_recovered) / 10000][
   , `:=` (hosp_cases = active_cases * hosp_rate, icu_cases = active_cases * (hosp_rate * icu_rate), scenario = "Observed", date = as.Date(date))][]
 
 #### early intervention -----------
-load(here("data", "early_intervention", "2021-01-02_20pct_smooth1_mcmc.RData"))
+load("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_smooth1_mcmc.RData")
+# load(here("data", "early_intervention", "2021-02-19_20pct_smooth1_mcmc.RData"))
 
 pred_dat <- data.table(
-  date   = seq.Date(from = as.Date("2021-01-02"), length.out = 199, by = "day"),
+  date   = seq.Date(from = as.Date("2021-02-19"), length.out = 199, by = "day"),
   i_prop = colMeans(theta_pp[, , 2])
 )[, active_cases := (1.34e9 * i_prop) / 10000]
 
@@ -47,21 +48,22 @@ pred_dat <- rbindlist(
   , `:=` (
     hosp_cases = smooth_active * hosp_rate,
     icu_cases  = smooth_active * hosp_rate * icu_rate,
-    scenario   = "Early non-lockdown\nintervention\n(January 1)"
+    scenario   = "Tier II\n(February 19)"
   )][, `:=` (hosp_cases = ifelse(hosp_cases < 0, 0, hosp_cases), icu_cases = ifelse(icu_cases < 0, 0, icu_cases))][date >= as.Date(start_date)][]
 
 #### early lockdown -----------
-load(here("data", "early_lockdown", "2021-03-15_smooth1_mh_mcmc.RData"))
+load("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-13_t3_mcmc.RData")
+# load(here("data", "early_lockdown", "2021-03-13_t3_mcmc.RData"))
 
 pred_dat_el <- data.table(
-  date   = seq.Date(from = as.Date("2021-03-15"), length.out = 199, by = "day"),
+  date   = seq.Date(from = as.Date("2021-03-13"), length.out = 199, by = "day"),
   i_prop = colMeans(theta_pp[, , 2])
 )[, active_cases := (1.34e9 * i_prop) / 10000]
 
 pred_dat_el <- rbindlist(
   list(
-    dat[date < as.Date("2021-03-15")],
-    pred_dat_el[data.table::between(date, as.Date("2021-03-15"), as.Date(end_date))]
+    dat[date < as.Date("2021-03-13")],
+    pred_dat_el[data.table::between(date, as.Date("2021-03-13"), as.Date(end_date))]
   ), fill = TRUE
 )[,
   smooth_active := predict(loess(active_cases ~ as.numeric(date), span = 1))
@@ -69,24 +71,55 @@ pred_dat_el <- rbindlist(
   , `:=` (
     hosp_cases = smooth_active * hosp_rate,
     icu_cases  = smooth_active * hosp_rate * icu_rate,
-    scenario   = "Moderate lockdown\n(March 15)"
-  )][, `:=` (hosp_cases = ifelse(hosp_cases < 0, 0, hosp_cases), icu_cases = ifelse(icu_cases < 0, 0, icu_cases))][date >= as.Date("2021-03-15")][]
+    scenario   = "Tier III\n(March 13)"
+  )][, `:=` (hosp_cases = ifelse(hosp_cases < 0, 0, hosp_cases), icu_cases = ifelse(icu_cases < 0, 0, icu_cases))][date >= as.Date("2021-03-13")][]
+
+load("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-19_t4_mcmc.RData")
+# load(here("data", "early_lockdown", "2021-03-19_t4_mcmc.RData"))
+
+# read_tsv(here("data", "early_lockdown", "2021-03-19_t4_data.txt"))
+
+pred_dat_el2 <- data.table(
+  date   = seq.Date(from = as.Date("2021-03-19"), length.out = 199, by = "day"),
+  i_prop = colMeans(theta_pp[, , 2])
+)[, active_cases := (1.34e9 * i_prop) / 10000][]
+
+pred_dat_el2 <- rbindlist(
+  list(
+    dat[date < as.Date("2021-03-19")],
+    pred_dat_el2[data.table::between(date, as.Date("2021-03-19"), as.Date(end_date))]
+  ), fill = TRUE
+)[,
+  smooth_active := predict(loess(active_cases ~ as.numeric(date), span = 1))
+][
+  , `:=` (
+    hosp_cases = smooth_active * hosp_rate,
+    icu_cases  = smooth_active * hosp_rate * icu_rate,
+    scenario   = "Tier IV\n(March 19)"
+  )][, `:=` (hosp_cases = ifelse(hosp_cases < 0, 0, hosp_cases), icu_cases = ifelse(icu_cases < 0, 0, icu_cases))][date >= as.Date("2021-03-19")][]
+
+pred_dat_el2[, hosp_cases := hosp_cases * (dat[date == "2021-03-19"][, last(hosp_cases)] / pred_dat_el2[, first(hosp_cases)])]
+pred_dat_el2[, icu_cases := icu_cases * (dat[date == "2021-03-19"][, last(icu_cases)] / pred_dat_el2[, first(icu_cases)])]
 
 # combine -----------
 plot_dat <- rbindlist(
   list(
     dat[data.table::between(date, as.Date(start_date), as.Date(end_date))],
     pred_dat,
-    pred_dat_el
+    pred_dat_el,
+    pred_dat_el2
   ), fill = TRUE
 )
 ####
 
 cols <- c(
-  "Observed"           = colores[["Observed"]][[1]],
-  "Early non-lockdown\nintervention\n(January 1)" = colores[["MH Pre-lock"]][[1]],
-  "Moderate lockdown\n(March 15)"  = colores[["Moderate lockdown"]][[2]]
+  "Observed"                      = colores4[[1]],
+  "Moderate PHI\n(February 19)"   = colores4[[2]],
+  "Strengthened PHI\n(March 13)"  = colores4[[3]],
+  "Moderate lockdown\n(March 19)" = colores4[[4]]
 )
+
+plot_dat <- plot_dat[scenario == "Tier II\n(February 19)", scenario := "Moderate PHI\n(February 19)"][scenario == "Tier III\n(March 13)", scenario := "Strengthened PHI\n(March 13)"][scenario == "Tier IV\n(March 19)", scenario := "Moderate lockdown\n(March 19)"][]
 
 hosp_plot <- plot_dat |>
   ggplot(aes(x = date, y = hosp_cases, group = scenario, color = scenario)) +

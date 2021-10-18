@@ -6,10 +6,10 @@ for (i in seq_along(f)) {source(here("src", f[i]))}
 end_date <- as.Date("2021-06-30")
 
 cols_1 <- c(
-  "Strengthened measures\n(non-lockdown)" = colores[["MH Pre-lock +20%"]][[1]],
-  "Stringent measures\n(non-lockdown)"    = colores[["MH Pre-lock"]][[2]],
-  "Moderate lockdown"                     = colores[["Moderate lockdown"]][[2]],
-  "Strong lockdown"                       = colores[["Strong lockdown"]][[2]]
+  "Strengthened measures\nTier II" = colores[["MH Pre-lock +20%"]][[1]],
+  "Stringent measures\nTier III"   = colores[["MH Pre-lock"]][[2]],
+  "Moderate lockdown\nTier IV"     = colores[["Moderate lockdown"]][[2]],
+  "Strong lockdown\nTier V"        = colores[["Strong lockdown"]][[2]]
 )
 
 cols_2 <- c(
@@ -31,10 +31,10 @@ pis <- bind_rows(pis, mh20_pis) %>%
   filter(place %in% c("India", "Maharashtra", "Maharashtra early", "MH Pre-lock +20%")) %>%
   mutate(
     place = case_when(
-      place == "India" ~ "Strong lockdown",
-      place == "Maharashtra" ~ "Moderate lockdown",
-      place == "Maharashtra early" ~ "Stringent measures\n(non-lockdown)",
-      place == "MH Pre-lock +20%" ~ "Strengthened measures\n(non-lockdown)"
+      place == "India" ~ "Strong lockdown\nTier V",
+      place == "Maharashtra" ~ "Moderate lockdown\nTier IV",
+      place == "Maharashtra early" ~ "Stringent measures\nTier III",
+      place == "MH Pre-lock +20%" ~ "Strengthened measures\nTier II"
     )
   )
 

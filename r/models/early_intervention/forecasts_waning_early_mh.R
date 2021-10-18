@@ -106,8 +106,8 @@ if (arrayid == 1) {
 
 if (arrayid == 2) {
   
-  message("pre-lockdown start date (early MH + 20%): January 1, 2021")
-  last_obs   <- as.Date("2021-01-01")
+  message("pre-lockdown start date (early MH + 20%): February 19, 2021")
+  last_obs   <- as.Date("2021-02-19")
   start_obs  <- last_obs - 99
   start_proj <- last_obs + 1
   last_proj  <- last_obs + 200

@@ -23,7 +23,8 @@ extract_cfr <- function(start_date = "2021-02-15") {
       mutate(cfr_kl = daily_deaths / daily_cases) %>%
       mutate(cfr_kl = ifelse(date == "2021-07-20", NA, cfr_kl)) %>%
       mutate(cfr_kl = data.table::nafill(cfr_kl, type = "locf")) %>%
-      mutate(cfr_kl_t7 = zoo::rollmean(cfr_kl, k = 7, fill = NA, align = "right"))
+      mutate(cfr_kl_t7 = data.table::frollmean(cfr_kl, n = 7))
+      # mutate(cfr_kl_t7 = zoo::rollmean(cfr_kl, k = 7, fill = NA, align = "right"))
     d <- d %>% left_join(taco_kl %>% select(date, cfr_kl, cfr_kl_t7), by = "date")
     
     cli::cli_alert_info("extracting Maharashtra CFR...")
@@ -40,7 +41,8 @@ extract_cfr <- function(start_date = "2021-02-15") {
       mutate(cfr_mh = daily_deaths / daily_cases) %>%
       mutate(cfr_mh = ifelse(date == "2021-07-20", NA, cfr_mh)) %>%
       mutate(cfr_mh = data.table::nafill(cfr_mh, type = "locf")) %>%
-      mutate(cfr_mh_t7 = zoo::rollmean(cfr_mh, k = 7, fill = NA, align = "right"))
+      mutate(cfr_mh_t7 = data.table::frollmean(cfr_mh, n = 7))
+      # mutate(cfr_mh_t7 = zoo::rollmean(cfr_mh, k = 7, fill = NA, align = "right"))
     d <- d %>% left_join(taco %>% select(date, cfr_mh, cfr_mh_t7), by = "date")
     
     cli::cli_alert_info("extracting India CFR...")
@@ -48,7 +50,8 @@ extract_cfr <- function(start_date = "2021-02-15") {
       mutate(cfr = daily_deaths / daily_cases) %>%
       mutate(cfr = ifelse(date == "2021-07-20", NA, cfr)) %>%
       mutate(cfr = data.table::nafill(cfr, type = "locf")) %>%
-      mutate(cfr_t7 = zoo::rollmean(x = cfr, k = 7, fill = NA, align = "right")) %>%
+      mutate(cfr_t7 = data.table::frollmean(cfr, n = 7)) %>%
+      # mutate(cfr_t7 = zoo::rollmean(x = cfr, k = 7, fill = NA, align = "right")) %>%
       filter(date >= start_date)
   
   return(d)

@@ -21,36 +21,30 @@ obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
   rename(date = date_ymd) %>%
   filter(date >= "2021-02-15")
 
-scenarios <- c("2021-03-15", "2021-03-30", "no_intervention")
+scen_dates <- c("2021-03-13", "2021-03-19")
+scen_tiers <- c(3, 4, 5)
 
-for (i in seq_along(scenarios)) {
-  tmp_filename    <- glue("{scenarios[i]}_smooth1_data.txt")
-  tmp_mh_filename <- glue("{scenarios[i]}_smooth1_mh_data.txt")
-  if (i == 1) {
-    p <- read_tsv(here("data", "early_lockdown",
-                       tmp_filename),
-                  col_types = cols()) %>%
-      mutate(scenario = scenarios[i])
+for (i in seq_along(scen_dates)) {
+  for (j in seq_along(scen_tiers)) {
     
-    p_mh <- read_tsv(here("data", "early_lockdown",
-                       tmp_mh_filename),
-                  col_types = cols()) %>%
-      mutate(scenario = scenarios[i])
+    tmp_filename    <- glue("{scen_dates[i]}_t{scen_tiers}_data.txt")
     
-  } else {
-    p <- bind_rows(p,
-                   read_tsv(here("data", "early_lockdown",
-                                 tmp_filename),
-                            col_types = cols()) %>%
-                     mutate(scenario = scenarios[i]))
+    if (i == 1 & j == 1) {
+      p <- read_tsv(here("data", "early_lockdown",
+                         tmp_filename),
+                    col_types = cols()) %>%
+        mutate(start_date = scen_dates[i], tier = glue("Tier {scen_tiers[j]}"))
+      
+    } else {
+      p <- bind_rows(p,
+                     read_tsv(here("data", "early_lockdown",
+                                   tmp_filename),
+                              col_types = cols()) %>%
+                       mutate(start_date = scen_dates[i], tier = glue("Tier {scen_tiers[j]}")))
+
+    }
     
-    p_mh <- bind_rows(p_mh,
-                   read_tsv(here("data", "early_lockdown",
-                                 tmp_mh_filename),
-                            col_types = cols()) %>%
-                     mutate(scenario = scenarios[i]))
   }
-  
 }
 
 p_e <- read_tsv(here("data", "early_intervention", "2021-01-02_20pct_smooth1_data.txt")) %>%

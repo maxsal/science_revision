@@ -1,4 +1,4 @@
-ally::libri(data.table, covid19india, tidyverse, glue, here, ally, patchwork)
+ally::libri(data.table, covid19india, tidyverse, glue, here, ally, patchwork, ggtext)
 
 make_r_count_stack_plots <- function(place, start_date = "2021-01-01", end_date = "2021-07-31", line_col = "#138808", unity_col = "#FF9933", mark_dates = NULL) {
   
@@ -9,16 +9,16 @@ make_r_count_stack_plots <- function(place, start_date = "2021-01-01", end_date 
   cols <- c("place", "date", "daily_cases", "total_cases")
   
   if (tolower(place) == "india") {
-    data <- covid19india::get_nat_counts(useDT = TRUE)[, date := as.Date(date)][, ..cols]
+    data <- covid19india::get_nat_counts()[, date := as.Date(date)][, ..cols]
   }
   if (tolower(place) == "maharashtra") {
-    data <- covid19india::get_state_counts(useDT = TRUE)[place == "Maharashtra"][, date := as.Date(date)][, ..cols]
+    data <- covid19india::get_state_counts()[place == "Maharashtra"][, date := as.Date(date)][, ..cols]
   }
   if (tolower(place) %in% c("mumbai", "delhi")) {
     data <- data.table::setDT(covid19india::get_district_counts())[district == place][, place := place][, ..cols][, date := as.Date(date)]
   }
   
-  r_data <- data.table::setDT(covid19india::get_r0(data))
+  r_data <- covid19india::get_r0(data)
   
   comb <- data.table::merge.data.table(data[data.table::between(date, lower = as.Date(start_date), upper = as.Date(end_date))], r_data[data.table::between(date, lower = as.Date(start_date), upper = as.Date(end_date))], by = c("place", "date"), all.x = TRUE)
   
@@ -64,7 +64,6 @@ make_r_count_stack_plots <- function(place, start_date = "2021-01-01", end_date 
   if (tolower(place) != "maharashtrah") {
     location <- place
     pi_data <- fread("data_for_lockdown_extended.csv")[place == location]
-    # pi_data  <- fread("pi_schedule_extended.txt")[place == location]
     start_r <- mean(pi_data[data.table::between(date, as.Date("2021-03-28") - 7, as.Date("2021-03-28") - 1)][, r_est], na.rm = TRUE)
     pi_data <- pi_data[data.table::between(date, as.Date("2021-03-28"), as.Date(end_date))][
       , date := as.Date(date)][
