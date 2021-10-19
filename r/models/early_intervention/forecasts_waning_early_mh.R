@@ -1,5 +1,6 @@
 # libraries ----------
-pacman::p_load(tidyverse, chron, rjags, gtools, VGAM, here, devtools, eSIR, glue)
+pacman::p_load(tidyverse, chron, rjags, gtools, VGAM, here, devtools, eSIR, glue
+               zoo)
 
 f <- list.files("~/projects/science_revision/src/")
 for (i in seq_along(f)) {source(paste0("~/projects/science_revision/src/", f[i]))}
