@@ -1,12 +1,15 @@
+# libraries ----------
 library(data.table)
 library(janitor)
 library(ggplot2)
 library(patchwork)
 library(here)
 
+# source scripts and functions ----------
 f <- list.files(here("src"))
 for (i in seq_along(f)) {source(here("src", f[i]))}
 
+# specifications ----------
 hosp_cap <- 1.9e6 / 1.366e9 * 10000 # beds per 10,000
 icu_cap  <- 95000 / 1.366e9 * 10000 # beds per 10,000
 
@@ -14,100 +17,98 @@ hosp_rate <- (.0604 * .921) + (.2817 * (1 - 0.921))
 icu_rate  <- 0.11 # conditional on hospitalization
 
 line_col  <- "#138808"
-# unity_col <- "#FF9933"
 unity_col <- "gray40"
 
 start_date <- "2021-01-01"
 end_date   <- "2021-06-30"
 
-dat <- fread("http://data.covid19india.org/csv/latest/case_time_series.csv",
-             showProgress = FALSE)[, -c("Date")]
-setnames(dat, "Date_YMD", "date")
-setnames(dat, names(dat), make_clean_names(names(dat)))
+# data ------------
+dat <- fread("data/covid19india_national_counts_20211029.csv")
 
-dat <- dat[, active_cases := (total_confirmed - total_recovered) / 10000][
+dat <- dat[, active_cases := (total_cases - total_recovered) / 10000][
   , `:=` (hosp_cases = active_cases * hosp_rate, icu_cases = active_cases * (hosp_rate * icu_rate), scenario = "Observed", date = as.Date(date))][]
 
+extracto <- function(x, start = as.Date("2021-02-19"), l_out = 199,
+                     scen = "Tier II\n(February 19)", sp = 0.75,
+                     correct = TRUE) {
+  
+  cli::cli_alert_info("*beep boop* loading data...")
+  load(x)
+  cli::cli_alert_success("*beep boop* data loaded!")
+  
+  tmp <- data.table(
+    date   = seq.Date(from = start, length.out = l_out, by = "day"),
+    i_prop = colMeans(theta_pp[, , 2])
+  )[, active_cases := (1.34e9 * i_prop) / 10000][]
+  
+  tmp_out <- rbindlist(
+    list(
+      dat[date < as.Date(start)],
+      tmp[data.table::between(date, as.Date(start), as.Date(end_date))][, place := "India"]
+    ), fill = TRUE
+  )[,
+    smooth_active := predict(loess(active_cases ~ as.numeric(date), span = sp))
+  ][
+    , `:=` (
+      hosp_cases = smooth_active * hosp_rate,
+      icu_cases  = smooth_active * hosp_rate * icu_rate,
+      scenario   = scen
+    )][, `:=` (hosp_cases = ifelse(hosp_cases < 0, 0, hosp_cases), icu_cases = ifelse(icu_cases < 0, 0, icu_cases))][date >= as.Date(start)][]
+  
+  if (correct == TRUE) {
+    tmp_out[, hosp_cases := hosp_cases * dat[date == start][, last(hosp_cases)] / tmp_out[, first(hosp_cases)]]
+    tmp_out[, icu_cases := icu_cases * dat[date == start][, last(icu_cases)] / tmp_out[, first(icu_cases)]]
+  }
+  
+  return(tmp_out)
+  
+}
+
 #### early intervention -----------
-load("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_smooth1_mcmc.RData")
-# load(here("data", "early_intervention", "2021-02-19_20pct_smooth1_mcmc.RData"))
+feb_19 <- extracto(
+  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_smooth1_mcmc.RData",
+  start = as.Date("2021-02-19"),
+  scen  = "Tier II\n(February 19)",
+  sp    = 0.15
+  )
 
-pred_dat <- data.table(
-  date   = seq.Date(from = as.Date("2021-02-19"), length.out = 199, by = "day"),
-  i_prop = colMeans(theta_pp[, , 2])
-)[, active_cases := (1.34e9 * i_prop) / 10000]
+mar_13 <- extracto(
+  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-13_t3_mcmc.RData",
+  start = as.Date("2021-03-13"),
+  scen  = "Tier III\n(March 13)",
+  sp    = 0.15
+)
 
-pred_dat <- rbindlist(
-  list(
-    dat[date < as.Date(start_date)],
-    pred_dat[data.table::between(date, as.Date(start_date), as.Date(end_date))]
-  ), fill = TRUE
-)[,
-  smooth_active := predict(loess(active_cases ~ as.numeric(date), span = 0.75))
-][
-  , `:=` (
-    hosp_cases = smooth_active * hosp_rate,
-    icu_cases  = smooth_active * hosp_rate * icu_rate,
-    scenario   = "Tier II\n(February 19)"
-  )][, `:=` (hosp_cases = ifelse(hosp_cases < 0, 0, hosp_cases), icu_cases = ifelse(icu_cases < 0, 0, icu_cases))][date >= as.Date(start_date)][]
+mar_19 <- extracto(
+  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-19_t4_mcmc.RData",
+  start = as.Date("2021-03-19"),
+  scen  = "Tier IV\n(March 19)",
+  sp    = 0.15
+)
 
-#### early lockdown -----------
-load("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-13_t3_mcmc.RData")
-# load(here("data", "early_lockdown", "2021-03-13_t3_mcmc.RData"))
+mar_30 <- extracto(
+  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-30_smooth1_mh_mcmc.RData",
+  start = as.Date("2021-03-30"),
+  scen  = "Tier IV\n(March 30)",
+  sp    = 0.15
+)
 
-pred_dat_el <- data.table(
-  date   = seq.Date(from = as.Date("2021-03-13"), length.out = 199, by = "day"),
-  i_prop = colMeans(theta_pp[, , 2])
-)[, active_cases := (1.34e9 * i_prop) / 10000]
-
-pred_dat_el <- rbindlist(
-  list(
-    dat[date < as.Date("2021-03-13")],
-    pred_dat_el[data.table::between(date, as.Date("2021-03-13"), as.Date(end_date))]
-  ), fill = TRUE
-)[,
-  smooth_active := predict(loess(active_cases ~ as.numeric(date), span = 1))
-][
-  , `:=` (
-    hosp_cases = smooth_active * hosp_rate,
-    icu_cases  = smooth_active * hosp_rate * icu_rate,
-    scenario   = "Tier III\n(March 13)"
-  )][, `:=` (hosp_cases = ifelse(hosp_cases < 0, 0, hosp_cases), icu_cases = ifelse(icu_cases < 0, 0, icu_cases))][date >= as.Date("2021-03-13")][]
-
-load("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-19_t4_mcmc.RData")
-# load(here("data", "early_lockdown", "2021-03-19_t4_mcmc.RData"))
-
-# read_tsv(here("data", "early_lockdown", "2021-03-19_t4_data.txt"))
-
-pred_dat_el2 <- data.table(
-  date   = seq.Date(from = as.Date("2021-03-19"), length.out = 199, by = "day"),
-  i_prop = colMeans(theta_pp[, , 2])
-)[, active_cases := (1.34e9 * i_prop) / 10000][]
-
-pred_dat_el2 <- rbindlist(
-  list(
-    dat[date < as.Date("2021-03-19")],
-    pred_dat_el2[data.table::between(date, as.Date("2021-03-19"), as.Date(end_date))]
-  ), fill = TRUE
-)[,
-  smooth_active := predict(loess(active_cases ~ as.numeric(date), span = 1))
-][
-  , `:=` (
-    hosp_cases = smooth_active * hosp_rate,
-    icu_cases  = smooth_active * hosp_rate * icu_rate,
-    scenario   = "Tier IV\n(March 19)"
-  )][, `:=` (hosp_cases = ifelse(hosp_cases < 0, 0, hosp_cases), icu_cases = ifelse(icu_cases < 0, 0, icu_cases))][date >= as.Date("2021-03-19")][]
-
-pred_dat_el2[, hosp_cases := hosp_cases * (dat[date == "2021-03-19"][, last(hosp_cases)] / pred_dat_el2[, first(hosp_cases)])]
-pred_dat_el2[, icu_cases := icu_cases * (dat[date == "2021-03-19"][, last(icu_cases)] / pred_dat_el2[, first(icu_cases)])]
+apr_15 <- extracto(
+  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-04-15_smooth1_mh_mcmc.RData",
+  start = as.Date("2021-04-15"),
+  scen  = "Tier IV\n(April 15)",
+  sp    = 0.15
+)
 
 # combine -----------
 plot_dat <- rbindlist(
   list(
     dat[data.table::between(date, as.Date(start_date), as.Date(end_date))],
-    pred_dat,
-    pred_dat_el,
-    pred_dat_el2
+    feb_19,
+    mar_13,
+    mar_19,
+    mar_30,
+    apr_15
   ), fill = TRUE
 )
 ####
@@ -116,17 +117,28 @@ cols <- c(
   "Observed"                      = colores4[[1]],
   "Moderate PHI\n(February 19)"   = colores4[[2]],
   "Strengthened PHI\n(March 13)"  = colores4[[3]],
-  "Moderate lockdown\n(March 19)" = colores4[[4]]
+  "Moderate lockdown\n(March 19)" = colores4[[4]],
+  "Moderate lockdown\n(March 30)" = colores4[[4]],
+  "Moderate lockdown\n(April 15)" = colores4[[4]]
 )
 
-plot_dat <- plot_dat[scenario == "Tier II\n(February 19)", scenario := "Moderate PHI\n(February 19)"][scenario == "Tier III\n(March 13)", scenario := "Strengthened PHI\n(March 13)"][scenario == "Tier IV\n(March 19)", scenario := "Moderate lockdown\n(March 19)"][]
+plot_dat <- plot_dat[
+  scenario == "Tier II\n(February 19)", scenario := "Moderate PHI\n(February 19)"][
+    scenario == "Tier III\n(March 13)", scenario := "Strengthened PHI\n(March 13)"][
+      scenario == "Tier IV\n(March 19)", scenario := "Moderate lockdown\n(March 19)"][
+        scenario == "Tier IV\n(March 30)", scenario := "Moderate lockdown\n(March 30)"][
+          scenario == "Tier IV\n(April 15)", scenario := "Moderate lockdown\n(April 15)"
+        ][, lt := "solid"][scenario == "Moderate lockdown\n(March 30)", lt := "dashed"][
+          scenario == "Moderate lockdown\n(April 15)", lt := "dotted"
+        ]
 
 hosp_plot <- plot_dat |>
   ggplot(aes(x = date, y = hosp_cases, group = scenario, color = scenario)) +
   geom_ribbon(data = plot_dat[hosp_cases > hosp_cap], aes (x = date, ymax = hosp_cases), ymin = hosp_cap, fill = "red", alpha = 0.4, color = NA) +
   geom_hline(yintercept = hosp_cap, color = unity_col, size = 1) +
-  geom_line(size = 1) +
+  geom_line(aes(linetype = lt), size = 1) +
   scale_color_manual(values = cols) +
+  scale_linetype_identity() +
   annotate(geom = "text", label = glue::glue("{format(round(hosp_cap, 1), nsmall = 1)} hospital beds per 10,000"),
            x = as.Date(start_date), y = hosp_cap + 2, hjust = 0, color = unity_col, fontface = "bold") + 
   labs(
@@ -151,8 +163,9 @@ icu_plot <- plot_dat |>
   ggplot(aes(x = date, y = icu_cases, group = scenario, color = scenario)) +
   geom_ribbon(data = plot_dat[icu_cases > icu_cap], aes (x = date, ymax = icu_cases), ymin = icu_cap, fill = "red", alpha = 0.4, color = NA) +
   geom_hline(yintercept = icu_cap, color = unity_col, size = 1) +
-  geom_line(size = 1) +
+  geom_line(aes(linetype = lt), size = 1) +
   scale_color_manual(values = cols) +
+  scale_linetype_identity() +
   annotate(geom = "text", label = glue::glue("{format(round(icu_cap, 1), nsmall = 1)} ICU beds per 10,000"),
            x = as.Date(start_date), y = icu_cap + .25, hjust = 0, color = unity_col, fontface = "bold") + 
   labs(
