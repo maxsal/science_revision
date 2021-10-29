@@ -1,9 +1,9 @@
 # libraries ----------
-pacman::p_load(tidyverse, lubridate, ggsci, ggrepel, janitor, glue, here,
-               ggtext, patchwork)
+ally::libri(tidyverse, lubridate, ggsci, ggrepel,
+            janitor, glue, here, ggtext, patchwork)
 source(here("src", "extract_cfr.R"))
 
-prod <- TRUE
+# prod <- TRUE
 end_date <- "2021-06-30"
 
 # load data ----------
@@ -22,21 +22,18 @@ obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
 
 scenarios  <- c("4wk", "6wk", "8wk")
 scenario_names <- c("4 weeks", "6 weeks", "8 weeks")
-tmp_folder <- ifelse(prod == TRUE, "data", "test")
 
 for (i in seq_along(scenarios)) {
   
-  tmp_filename    <- glue("2021-04-15_smooth1_{scenarios[i]}_data.txt")
+  tmp_filename <- glue("/Volumes/tiny/projects/covid/science_revision/data/lol/2021-04-15_smooth1_{scenarios[i]}_data.txt")
   
   if (i == 1) {
-    p <- read_tsv(here(tmp_folder, "lol", tmp_filename),
-                  col_types = cols()) %>%
-      mutate(scenario = scenario_names[i])
+    p <- fread(tmp_filename)[, scenario := scenario_names[i]]
   } else {
-    p <- bind_rows(p,
-                   read_tsv(here(tmp_folder, "lol", tmp_filename),
-                            col_types = cols()) %>%
-                     mutate(scenario = scenario_names[i]))
+    p <- rbindlist(list(
+      p,
+      fread(tmp_filename)[, scenario := scenario_names[i]]
+    ))
   }
   
 }
@@ -89,11 +86,18 @@ clean_prep <- function(x) {
 total_smoothed_plot    <- clean_prep(x = p)
 
 # plot -----------
+colores <- c(
+  "Observed" = "black",
+  "4 weeks"  = colores4[[2]],
+  "6 weeks"  = colores4[[3]],
+  "8 weeks"  = colores4[[6]]
+)
+
 cases_p <- total_smoothed_plot %>% 
   filter(date >= "2021-02-15" & date <= end_date) %>%
   ggplot(aes(x = date, y = fitted)) + 
   geom_line(aes(color = scenario), size = 1) +
-  scale_color_lancet() + 
+  scale_color_manual(values = colores) +
   geom_vline(data = total_smoothed_plot %>% 
                group_by(scenario) %>% 
                filter(date == min(date)) %>% 

@@ -1,62 +1,71 @@
-extract_cfr <- function(start_date = "2021-02-15") {
-  
-  cli::cli_alert_info("pulling time series from covid19india...")
-  d <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
-                col_types = cols()) %>%
-    clean_names() %>%
-    select(-date) %>%
-    select(date = date_ymd, daily_cases = daily_confirmed, daily_deaths = daily_deceased,
-           total_cases = total_confirmed, total_deaths = total_deceased, 
-           everything())
+library(data.table)
+library(janitor)
 
-  cli::cli_alert_info("extracting Kerala CFR...")
-    taco_kl <- read_csv("https://api.covid19india.org/csv/latest/state_wise_daily.csv",
-                     col_types = cols()) %>%
-      clean_names() %>%
-      select(date = date_ymd, status, value = kl) %>%
-      pivot_wider(
-        names_from  = "status",
-        values_from = "value",
-        id_cols     = "date"
-      ) %>%
-      select(date, daily_cases = Confirmed, daily_deaths = Deceased) %>%
-      mutate(cfr_kl = daily_deaths / daily_cases) %>%
-      mutate(cfr_kl = ifelse(date == "2021-07-20", NA, cfr_kl)) %>%
-      mutate(cfr_kl = data.table::nafill(cfr_kl, type = "locf")) %>%
-      mutate(cfr_kl_t7 = data.table::frollmean(cfr_kl, n = 7))
-      # mutate(cfr_kl_t7 = zoo::rollmean(cfr_kl, k = 7, fill = NA, align = "right"))
-    d <- d %>% left_join(taco_kl %>% select(date, cfr_kl, cfr_kl_t7), by = "date")
+
+d       <- covid19india::get_nat_counts(mohfw = FALSE)
+d_state <- covid19india::get_state_counts(mohfw = FALSE)
+
+extract_cfr <- function(end_date = "2021-05-15", day_lag = 14) {
+  
+  get_state_cfr <- function(abb) {
     
-    cli::cli_alert_info("extracting Maharashtra CFR...")
-    taco <- read_csv("https://api.covid19india.org/csv/latest/state_wise_daily.csv",
-                     col_types = cols()) %>%
-      clean_names() %>%
-      select(date = date_ymd, status, value = mh) %>%
-      pivot_wider(
-        names_from  = "status",
-        values_from = "value",
-        id_cols     = "date"
-      ) %>%
-      select(date, daily_cases = Confirmed, daily_deaths = Deceased) %>%
-      mutate(cfr_mh = daily_deaths / daily_cases) %>%
-      mutate(cfr_mh = ifelse(date == "2021-07-20", NA, cfr_mh)) %>%
-      mutate(cfr_mh = data.table::nafill(cfr_mh, type = "locf")) %>%
-      mutate(cfr_mh_t7 = data.table::frollmean(cfr_mh, n = 7))
-      # mutate(cfr_mh_t7 = zoo::rollmean(cfr_mh, k = 7, fill = NA, align = "right"))
-    d <- d %>% left_join(taco %>% select(date, cfr_mh, cfr_mh_t7), by = "date")
+    tmp_taco <- d_state[place == covid19india::pop[abbrev == abb, place]][
+      , cfr := daily_deaths / shift(daily_cases, n = day_lag)
+    ][
+      date == "2021-07-20", cfr := NA
+    ]
     
-    cli::cli_alert_info("extracting India CFR...")
-    d <- d  %>%
-      mutate(cfr = daily_deaths / daily_cases) %>%
-      mutate(cfr = ifelse(date == "2021-07-20", NA, cfr)) %>%
-      mutate(cfr = data.table::nafill(cfr, type = "locf")) %>%
-      mutate(cfr_t7 = data.table::frollmean(cfr, n = 7)) %>%
-      # mutate(cfr_t7 = zoo::rollmean(x = cfr, k = 7, fill = NA, align = "right")) %>%
-      filter(date >= start_date)
+    if (nrow(tmp_taco[date == "2021-02-21"]) == 0) {
+      tmp_taco <- rbindlist(list(
+        tmp_taco,
+        data.table(
+          place = covid19india::pop[abbrev == abb, place],
+          date  = as.Date("2021-02-21")
+        )
+      ), fill = TRUE)[order(place, date)]
+    }
+    
+    tmp_taco <- tmp_taco[
+      , cfr := nafill(cfr, type = "locf")
+    ][
+      , cfr_t7 := frollmean(cfr, n = 7)
+    ][, .(date, cfr, cfr_t7)][]
+    
+    setnames(tmp_taco,
+             old = c("cfr", "cfr_t7"),
+             new = c(paste0("cfr_", abb), paste0("cfr_", abb, "_t7"))
+    )
+    
+    return(tmp_taco)
+    
+  }
+  
+  taco_kl <- get_state_cfr(abb = "kl")
+  taco_mh <- get_state_cfr(abb = "mh")
+  
+  d <- data.table::merge.data.table(d, taco_kl, by = "date")
+  d <- data.table::merge.data.table(d, taco_mh, by = "date")
+  
+  d <- d[, cfr := daily_deaths / shift(daily_cases, n = day_lag)][date == "2021-07-20", cfr := NA][is.infinite(cfr), cfr := NA]
+  
+  if (nrow(d[place == "India" & date == "2021-02-21"]) == 0) {
+    d <- rbindlist(list(
+      d,
+      data.table(
+        place = "India",
+        date  = as.Date("2021-02-21")
+      )
+    ), fill = TRUE)[order(place, date)]
+  }
+  
+  d <- d[
+    , cfr := nafill(cfr, type = "locf")
+  ][, cfr_t7 := frollmean(cfr, n = 7)][between(date, as.Date("2021-02-15"), as.Date(end_date))]
   
   return(d)
   
 }
+
 
 # extract plot defaults -----------
 get_plt_def <- function(mh, kl) {

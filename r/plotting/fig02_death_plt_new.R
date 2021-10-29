@@ -1,5 +1,6 @@
 # libraries ----------
-pacman::p_load(tidyverse, lubridate, ggsci, ggrepel, janitor, glue, here, ggtext, patchwork)
+ally::libri(tidyverse, lubridate, ggsci, ggrepel, janitor, glue,
+            here, ggtext, patchwork)
 
 f <- list.files(here("src"))
 for (i in seq_along(f)) {source(here("src", f[i]))}
@@ -75,7 +76,7 @@ p <- bind_rows(p, early)
 p <- p %>% filter(scenario %in% c("Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15"))
 
 # extract CFR schedule and get plot defaults -----------
-d       <- extract_cfr(start_date = as.Date(start_date))
+d <- extract_cfr(end_date = end_date)[date >= as.Date(start_date)]
 
 # prepare data -----------
 clean_prep <- function(x, var) {
