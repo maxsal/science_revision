@@ -25,8 +25,8 @@ if (Sys.getenv("production") == "TRUE") {
 }
 
 # specifications ----------
-R_0                <- 2     # basic reproduction number
-span               <- 1     # span for loess smoother on pi schedule
+R_0                <- as.numeric(Sys.getenv("R_0"))     # basic reproduction number
+span               <- 1                                 # span for loess smoother on pi schedule
 save_files         <- FALSE
 save_mcmc          <- TRUE
 save_plot_data     <- TRUE
@@ -69,7 +69,7 @@ if (arrayid == 1) {
   
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
-  casename   <- glue("{last_obs + 1}_smooth{span}")
+  casename   <- glue("{last_obs + 1}_t3_r{R_0}")
   
   feb19_mod <- tvt.eSIR(
     Y,
@@ -124,7 +124,7 @@ if (arrayid == 2) {
   
   use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
   
-  casename   <- glue("{last_obs + 1}_20pct_smooth{span}")
+  casename   <- glue("{last_obs + 1}_20pct_t2_r{R_0}")
   
   feb19_20pct_mod <- tvt.eSIR(
     Y,
@@ -145,6 +145,446 @@ if (arrayid == 2) {
   )
   
   clean_out <- feb19_20pct_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown + 20%")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}
+
+if (arrayid == 3) {
+  
+  message("pre-lockdown start date (early MH + 20%): March 13, 2021")
+  last_obs   <- as.Date("2021-03-12")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "MH Pre-lock +20%") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_20pct_t2_r{R_0}")
+  
+  feb19_20pct_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    R0             = R_0,
+    dic            = TRUE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- feb19_20pct_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown + 20%")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}
+
+if (arrayid == 4) {
+  
+  message("pre-lockdown start date (early MH + 20%): March 19, 2021")
+  last_obs   <- as.Date("2021-03-18")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "MH Pre-lock +20%") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_20pct_t2_r{R_0}")
+  
+  feb19_20pct_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    R0             = R_0,
+    dic            = TRUE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- feb19_20pct_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown + 20%")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}
+
+if (arrayid == 5) {
+  
+  message("pre-lockdown start date (early MH + 20%): March 30, 2021")
+  last_obs   <- as.Date("2021-03-29")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "MH Pre-lock +20%") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_20pct_t2_r{R_0}")
+  
+  feb19_20pct_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    R0             = R_0,
+    dic            = TRUE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- feb19_20pct_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown + 20%")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}
+
+if (arrayid == 6) {
+  
+  message("pre-lockdown start date (early MH + 20%): April 15, 2021")
+  last_obs   <- as.Date("2021-04-14")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "MH Pre-lock +20%") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_20pct_t2_r{R_0}")
+  
+  feb19_20pct_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    R0             = R_0,
+    dic            = TRUE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- feb19_20pct_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown + 20%")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}
+
+if (arrayid == 7) {
+  
+  message("pre-lockdown start date: March 13, 2021")
+  last_obs   <- as.Date("2021-03-12")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "Maharashtra early") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_t3_r{R_0}")
+  
+  feb19_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    R0             = R_0,
+    dic            = TRUE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- feb19_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}
+
+if (arrayid == 8) {
+  
+  message("pre-lockdown start date: March 19, 2021")
+  last_obs   <- as.Date("2021-03-18")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "Maharashtra early") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_t3_r{R_0}")
+  
+  feb19_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    R0             = R_0,
+    dic            = TRUE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- feb19_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}
+
+if (arrayid == 9) {
+  
+  message("pre-lockdown start date: March 30, 2021")
+  last_obs   <- as.Date("2021-03-29")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "Maharashtra early") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_t3_r{R_0}")
+  
+  feb19_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    R0             = R_0,
+    dic            = TRUE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- feb19_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown")   
+  write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
+  write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
+  
+}
+
+if (arrayid == 10) {
+  
+  message("pre-lockdown start date: April 15, 2021")
+  last_obs   <- as.Date("2021-04-14")
+  start_obs  <- last_obs - 99
+  start_proj <- last_obs + 1
+  last_proj  <- last_obs + 200
+  proj_days  <- as.numeric(last_proj - start_proj) - 1
+  esir_days  <- as.numeric(last_proj - start_obs)
+  
+  d <- dat %>%
+    filter(place == "India" & date >= start_obs & date <= last_obs)
+  
+  NI_complete <- d$cases
+  RI_complete <- d$recovered + d$deaths
+  N           <- 1.34e9                          # population of India
+  R           <- unlist(RI_complete/N)           # proportion of recovered per day
+  Y           <- unlist(NI_complete/N-R)
+  
+  use_these_pis <- pi_sched %>%
+    select(-c(r_est)) %>%
+    dplyr::filter(place == "Maharashtra early") %>%
+    arrange(date) %>%
+    pull(smooth_pis) %>%
+    c(1, .)%>%
+    head(., -1)
+  
+  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
+  
+  casename   <- glue("{last_obs + 1}_t3_r{R_0}")
+  
+  feb19_mod <- tvt.eSIR(
+    Y,
+    R,
+    begin_str      = format(start_obs, "%m/%d/%Y"),
+    death_in_R     = 0.2,
+    T_fin          = esir_days,
+    pi0            = use_these_pis,
+    change_time    = use_these_dates,
+    R0             = R_0,
+    dic            = TRUE,
+    casename       = casename,
+    save_files     = save_files,
+    save_mcmc      = save_mcmc,
+    save_plot_data = save_plot_data,
+    M              = Ms,
+    nburnin        = nburnins
+  )
+  
+  clean_out <- feb19_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "MH Pre-lockdown")   
   write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
   write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
   
