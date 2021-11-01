@@ -1,6 +1,7 @@
 # libraries ----------
 librarian::shelf(
-  tidyverse, chron, rjags, gtools, here, devtools, lilywang1988/eSIR, glue
+  tidyverse, chron, rjags, gtools, here, devtools, lilywang1988/eSIR, glue,
+  zoo
   )
 
 # scripts in /Section 3 - Lockdown modeling/src/:
