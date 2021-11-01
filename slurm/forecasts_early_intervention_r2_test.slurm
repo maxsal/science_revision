@@ -18,7 +18,7 @@ export HTTP_PROXY=http://proxy.arc-ts.umich.edu:3128/
 export production=FALSE
 export R_0=2
 
-module load Rgeospatial/3.6.1-2019-09-29
+module load Rtidyverse/4.1.0
 module load jags
 
 Rscript --vanilla ~/projects/science_revision/r/models/early_intervention/forecasts_smooth_early_mh.R
