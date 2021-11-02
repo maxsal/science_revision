@@ -85,7 +85,7 @@ period_summary <- function(
   if (waning == TRUE) {
     load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen}_waning_forecast_MCMC.RData"))
   } else {
-    load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen}_mcmc.RData"))
+    load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen}_forecast_MCMC.RData"))
   }
 
   if (use_theta == FALSE) {

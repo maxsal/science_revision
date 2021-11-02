@@ -22,25 +22,25 @@ obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
   rename(date = date_ymd) %>%
   filter(date >= start_date)
 
-d1 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-13_t3_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-13", tier = "Tier 3", scenario = "Tier 3 - March 13")
-d2 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-19_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-19", tier = "Tier 4", scenario = "Tier 4 - March 19")
-d3 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-30_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-30", tier = "Tier 4", scenario = "Tier 4 - March 30")
-d4 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-04-15_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-04-15", tier = "Tier 4", scenario = "Tier 4 - April 15")
 d0 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_t2_r{r_0}_data.txt"), col_types = cols()) %>%
   mutate(start_date = "2021-02-19", tier = "Tier 2", scenario = "Tier 2 - February 19")
+d1 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-03-13_20pct_t2_r{r_0}_data.txt"), col_types = cols()) %>%
+  mutate(start_date = "2021-02-19", tier = "Tier 2", scenario = "Tier 2 - March 13")
+d2 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-03-19_20pct_t2_r{r_0}_data.txt"), col_types = cols()) %>%
+  mutate(start_date = "2021-02-19", tier = "Tier 2", scenario = "Tier 2 - March 19")
+d3 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-03-30_20pct_t2_r{r_0}_data.txt"), col_types = cols()) %>%
+  mutate(start_date = "2021-02-19", tier = "Tier 2", scenario = "Tier 2 - March 30")
+d4 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-04-15_20pct_t2_r{r_0}_data.txt"), col_types = cols()) %>%
+  mutate(start_date = "2021-02-19", tier = "Tier 2", scenario = "Tier 2 - April 15")
 
 
 d <- bind_rows(
   d0, d1, d2, d3, d4
 )
 
-p <- d %>% filter(scenario %in% c("Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15"))
+p <- d %>% filter(scenario %in% c("Tier 2 - February 19", "Tier 2 - March 13", "Tier 2 - March 19", "Tier 2 - March 30", "Tier 2 - April 15"))
 
-tmp_outname  <- glue("fig01_case_plot_new_r{r_0}.pdf")
+tmp_outname  <- glue("fig01_case_plot_t2_r{r_0}.pdf")
 tmp_title    <- "Effect of different interventions at different times"
 
 # prepare data ----------
@@ -48,10 +48,10 @@ clean_prep <- function(x) {
   
   none   <- obs %>% clean_scenario(p = x, stop_obs = end_date + 14, end_date = end_date + 14, scen = "No intervention")
   feb_19 <- obs %>% clean_scenario(p = x, stop_obs = "2021-02-19", end_date = end_date, scen = "Tier 2 - February 19")
-  mar_13 <- obs %>% clean_scenario(p = x, stop_obs = "2021-03-13", end_date = end_date, scen = "Tier 3 - March 13")
-  mar_19 <- obs %>% clean_scenario(p = x, stop_obs = "2021-03-19", end_date = end_date, scen = "Tier 4 - March 19")
-  mar_30 <- obs %>% clean_scenario(p = x, stop_obs = "2021-03-30", end_date = end_date, scen = "Tier 4 - March 30")
-  apr_15 <- obs %>% clean_scenario(p = x, stop_obs = "2021-04-15", end_date = end_date, scen = "Tier 4 - April 15")
+  mar_13 <- obs %>% clean_scenario(p = x, stop_obs = "2021-03-13", end_date = end_date, scen = "Tier 2 - March 13")
+  mar_19 <- obs %>% clean_scenario(p = x, stop_obs = "2021-03-19", end_date = end_date, scen = "Tier 2 - March 19")
+  mar_30 <- obs %>% clean_scenario(p = x, stop_obs = "2021-03-30", end_date = end_date, scen = "Tier 2 - March 30")
+  apr_15 <- obs %>% clean_scenario(p = x, stop_obs = "2021-04-15", end_date = end_date, scen = "Tier 2 - April 15")
   
   total <- none %>%
     add_row(feb_19) %>%
@@ -76,18 +76,18 @@ clean_prep <- function(x) {
               filter(scenario == "Tier 2 - February 19",
                      date >= "2021-02-10")) %>%
     add_row(total.smoothed %>% 
-              filter(scenario == "Tier 3 - March 13", 
+              filter(scenario == "Tier 2 - March 13", 
                      date >= "2021-03-04")) %>% 
     add_row(total.smoothed %>% 
-              filter(scenario == "Tier 4 - March 19", 
+              filter(scenario == "Tier 2 - March 19", 
                      date >= "2021-03-10")) %>% 
     add_row(total.smoothed %>% 
-              filter(scenario == "Tier 4 - March 30", 
+              filter(scenario == "Tier 2 - March 30", 
                      date >= "2021-03-21")) %>% 
     add_row(total.smoothed %>% 
-              filter(scenario == "Tier 4 - April 15", 
+              filter(scenario == "Tier 2 - April 15", 
                      date >= "2021-04-06")) %>% 
-    mutate(scenario = factor(scenario, levels = c("Observed", "Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15"))) %>%
+    mutate(scenario = factor(scenario, levels = c("Observed", "Tier 2 - February 19", "Tier 2 - March 13", "Tier 2 - March 19", "Tier 2 - March 30", "Tier 2 - April 15"))) %>%
     filter(date <= end_date) 
   
   return(total.smoothed.plot)
@@ -115,14 +115,16 @@ obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
 strong_cols <- c(colores[["Observed"]], colores[["MH Pre-lock"]], colores[["Strong lockdown"]])
 
 ## strong lockdown plot -----------
-tps <- as.data.table(total_smoothed_plot)
-tps[scenario == "Tier 2 - February 19", scenario := "Tier 2"]
-tps[scenario == "Tier 3 - March 13", scenario := "Tier 3"]
-tps[scenario == "Tier 4 - March 19", scenario := "Tier 4"]
-tps[, scenario := factor(scenario, levels = c("Observed", "Tier 2", "Tier 3", "Tier 4",
-                                              "Tier 4 - March 30", "Tier 4 - April 15"))]
+tps <- as.data.table(total_smoothed_plot)[, scenario := factor(scenario, levels = c("Observed", "Tier 2 - February 19", "Tier 2 - March 13", "Tier 2 - March 19", "Tier 2 - March 30", "Tier 2 - April 15"))]
+# tps[scenario == "Tier 2 - February 19", scenario := "Tier 2"]
+# tps[scenario == "Tier 3 - March 13", scenario := "Tier 3"]
+# tps[scenario == "Tier 4 - March 19", scenario := "Tier 4"]
+# tps[, scenario := factor(scenario, levels = c("Observed", "Tier 2", "Tier 3", "Tier 4",
+#                                               "Tier 4 - March 30", "Tier 4 - April 15"))]
 
-cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"][scenario == "Tier 4 - March 30", lt := "longdash"][scenario == "Tier 4 - April 15", lt := "dotted"][] %>%
+names(colores4) <- tps[, unique(scenario)]
+
+cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"][scenario == "Tier 2 - March 30", lt := "longdash"][scenario == "Tier 2 - April 15", lt := "dotted"][] %>%
   # filter(date >= "2021-02-01" & date <= end_date) %>%
   ggplot(aes(x = date, y = fitted)) + 
   geom_line(aes(color = scenario, linetype = lt), size = 1) +
@@ -147,7 +149,7 @@ cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"]
   
   # date labels
   geom_text(data = tps[, .SD[date == min(date)], by = scenario][, .(scenario, date, fitted)][, `:=` (
-    text = c("Observed data", "February 19\nModerate PHI\n(non-lockdown)", "March 13\nStrengthened PHI\n(non-lockdown)", "March 19\nModerate\nlockdown", "March 30\nModerate\nlockdown", "April 15\nModerate\nlockdown"), 
+    text = c("Observed data", "February 19\nModerate PHI\n(non-lockdown)", "March 13\nModerate PHI\n(non-lockdown)", "March 19\nModerate PHI\n(non-lockdown)", "March 30\nModerate PHI\n(non-lockdown)", "April 15\nModerate PHI\n(non-lockdown)"), 
     x    = as.Date(c("2021-04-10", "2021-02-09", "2021-03-03", "2021-03-11", "2021-03-22", "2021-04-07")), 
     y    = c(125000, rep(350000, 5)) 
   )][],

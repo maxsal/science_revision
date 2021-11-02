@@ -7,11 +7,12 @@ for (i in seq_along(f)) {source(here("src", f[i]))}
 
 start_date <- as.Date("2021-01-01")
 end_date <- as.Date("2021-06-30")
+r_0 <- 5
 
 # # use maharashtra pi schedule? use kerala cfr schedule? ----------
 mh <- TRUE
 if (mh == TRUE) {
-  tmp_outname <- "fig02_death_plot.pdf"
+  tmp_outname <- glue("fig02_death_r{r_0}_plot.pdf")
   plt_title   <- "Predicted number of daily COVID-19 deaths under various interventions"
   cols <- c(colores[["Observed"]], colores[["MH Pre-lock"]], colores[["Moderate lockdown"]])
   names(cols)[names(cols) == "MH Pre-lock"] <- "Early intervention"
@@ -38,42 +39,23 @@ obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
   filter(date >= start_date) %>% 
   mutate(cfr = daily_deaths/daily_cases)
 
-scen_dates <- c("2021-03-13", "2021-03-19", "2021-03-30", "2021-04-15")
-scen_tiers <- c(3, 4)
-
-for (i in seq_along(scen_dates)) {
-  for (j in seq_along(scen_tiers)) {
-    
-    tmp_filename    <- glue("{scen_dates[i]}_t{scen_tiers[j]}_data.txt")
-    
-    if (i == 1 & j == 1) {
-      p <- read_tsv(paste0("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/", tmp_filename),
-                    col_types = cols()) %>%
-        mutate(start_date = scen_dates[i], tier = glue("Tier {scen_tiers[j]}"))
-      
-    } else {
-      if (!file.exists(paste0("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/", tmp_filename))) {
-        next
-      }
-      p <- bind_rows(p,
-                     read_tsv(paste0("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/", tmp_filename),
-                              col_types = cols()) %>%
-                       mutate(start_date = scen_dates[i], tier = glue("Tier {scen_tiers[j]}")))
-      
-    }
-    
-  }
-}
-
-p <- p %>%
-  mutate(scenario = glue("{tier} - {scenario}"))
-
-early <- read_tsv("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_smooth1_data.txt", col_types = cols()) %>%
+d1 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-13_t3_r{r_0}_data.txt"), col_types = cols()) %>%
+  mutate(start_date = "2021-03-13", tier = "Tier 3", scenario = "Tier 3 - March 13")
+d2 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-19_t4_r{r_0}_data.txt"), col_types = cols()) %>%
+  mutate(start_date = "2021-03-19", tier = "Tier 4", scenario = "Tier 4 - March 19")
+d3 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-30_t4_r{r_0}_data.txt"), col_types = cols()) %>%
+  mutate(start_date = "2021-03-30", tier = "Tier 4", scenario = "Tier 4 - March 30")
+d4 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-04-15_t4_r{r_0}_data.txt"), col_types = cols()) %>%
+  mutate(start_date = "2021-04-15", tier = "Tier 4", scenario = "Tier 4 - April 15")
+d0 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_t2_r{r_0}_data.txt"), col_types = cols()) %>%
   mutate(start_date = "2021-02-19", tier = "Tier 2", scenario = "Tier 2 - February 19")
 
-p <- bind_rows(p, early)
 
-p <- p %>% filter(scenario %in% c("Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15"))
+m <- bind_rows(
+  d0, d1, d2, d3, d4
+)
+
+p <- m %>% filter(scenario %in% c("Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15"))
 
 # extract CFR schedule and get plot defaults -----------
 d <- extract_cfr(end_date = end_date)[date >= as.Date(start_date)]
@@ -226,7 +208,7 @@ full_plt <- patched +
     title    = plt_title,
     subtitle = glue("{format(start_date, '%B %e, %Y')} to {format(end_date, '%B %e, %Y')}"),
     caption  = glue("**Notes:** Observations and prediction period until {format(end_date, '%B %e, %Y')}. ",
-                    "Figures in boxes show peak number of deaths for each intervention.<br>",
+                    "Figures in boxes show peak number of deaths for each intervention. Assumes starting R\u2080={r_0}.<br>",
                     "**Abbrev:** CFR, case-fatality rate<br>",
                     "**\uA9 COV-IND-19 Study Group**"),
     tag_levels = c("A")
