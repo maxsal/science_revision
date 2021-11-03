@@ -37,7 +37,7 @@ setwd(data_repo)
   last_obs   <- as.Date("2021-03-18")
   start_obs  <- last_obs - 99
   start_proj <- last_obs + 1
-  last_proj  <- last_obs + 30
+  last_proj  <- last_obs + 150
   cli::cli_alert_info("Projecting through {last_proj}")
   proj_days  <- as.numeric(last_proj - start_proj) - 1
   esir_days  <- as.numeric(last_proj - start_obs)
