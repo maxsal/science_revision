@@ -69,7 +69,7 @@ setwd(data_repo)
     nburnin        = nburnins
   )
   
-  clean_out <- no_int_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "No intervention")   
+  clean_out <- no_int_mod %>% cleanr_esir(N = N, adj = T, adj_len = 2, name = "No intervention", out_obs = TRUE)   
   write_tsv(clean_out$data, file = paste0("./", casename, "_data.txt"))
   write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
   
