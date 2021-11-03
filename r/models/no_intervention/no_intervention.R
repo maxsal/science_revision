@@ -51,16 +51,6 @@ setwd(data_repo)
   R           <- unlist(RI_complete/N)           # proportion of recovered per day
   Y           <- unlist(NI_complete/N-R)
   
-  use_these_pis <- pi_sched %>%
-    select(-c(r_est)) %>%
-    dplyr::filter(place == "Maharashtra early") %>%
-    arrange(date) %>%
-    pull(smooth_pis) %>%
-    c(1, .)%>%
-    head(., -1)
-  
-  use_these_dates <- format(as.Date(start_proj:last_proj, origin = "1970-01-01"), "%m/%d/%Y")[1:(length(use_these_pis) - 1)]
-  
   casename   <- glue("{last_obs + 1}_no_intervention_r{R_0}")
   
   no_int_mod <- tvt.eSIR(
