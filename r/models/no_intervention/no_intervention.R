@@ -7,6 +7,8 @@ librarian::shelf(
 f <- list.files("~/projects/science_revision/src/")
 for (i in seq_along(f)) {source(paste0("~/projects/science_revision/src/", f[i]))}
 
+
+start_date <- as.Date(Sys.getenv("start_date"))
 set.seed(20192020) # default: 20192020
 
 # Set variables based on testing or production
@@ -33,8 +35,8 @@ dat <- read_csv("~/projects/science_revision/data_for_lockdown_extended.csv", co
 setwd(data_repo)
 
 # no intervention -----------
-  cli::cli_alert_info("No intervention beginning March 19")
-  last_obs   <- as.Date("2021-03-18")
+  cli::cli_alert_info("No intervention beginning {start_date}")
+  last_obs   <- start_date - 1
   start_obs  <- last_obs - 99
   start_proj <- last_obs + 1
   last_proj  <- last_obs + 150
