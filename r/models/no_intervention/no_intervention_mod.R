@@ -86,8 +86,9 @@ setwd(data_repo)
       # lambdaRprec = lambdaRprec,
       dic = F,
       casename = casename,
-      save_files = F,
-      save_mcmc = F,
+      save_files = save_files,
+      save_mcmc = save_mcmc,
+      save_plot_data = save_plot_data,
       M = Ms,
       nburnin = nburnins
     )
@@ -97,4 +98,6 @@ setwd(data_repo)
   write_tsv(clean_out$data2, file = paste0("./", casename, "_data2.txt"))
   write_tsv(clean_out$out_tib, file = paste0("./", casename, "_out_table.txt"))
   
+  
+  cli::cli_alert_info("Look for output under casename: {casename}")
   cli::cli_alert_success("*beep boop* complete!!!")
