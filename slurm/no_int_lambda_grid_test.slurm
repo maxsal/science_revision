@@ -17,6 +17,7 @@ export https_proxy=http://proxy.arc-ts.umich.edu:3128/
 export HTTP_PROXY=http://proxy.arc-ts.umich.edu:3128/
 export production=FALSE
 export R_0=2
+export start_date="2021-03-18"
 
 module load R/4.1.0
 module load jags
