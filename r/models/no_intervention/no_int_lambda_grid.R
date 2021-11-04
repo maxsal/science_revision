@@ -10,6 +10,7 @@ for (i in seq_along(f)) {source(paste0("~/projects/science_revision/src/", f[i])
 g <- list.files("~/projects/science_revision/esir_mod/")
 for (i in seq_along(g)) {source(paste0("~/projects/science_revision/esir_mod/", g[i]))}
 
+arrayid <- Sys.getenv("SLURM_ARRAY_TASK_ID")
 
 start_date <- as.Date(Sys.getenv("start_date"))
 set.seed(20192020) # default: 20192020
