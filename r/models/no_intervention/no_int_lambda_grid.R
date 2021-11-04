@@ -73,7 +73,7 @@ setwd(data_repo)
   
 if (arrayid == 1) {
   
-  arr_id <- as.numeric(arrayid)
+  arr_id <- 1
   
   casename   <- glue("{last_obs + 1}_no_intervention_r{R_0}_s{seroprev}_lY{l_values$lY[arr_id]}_lR{l_values$lR[arr_id]}_mod")
   
@@ -112,7 +112,7 @@ if (arrayid == 1) {
   
 if (arrayid == 2) {
   
-  arr_id <- as.numeric(arrayid)
+  arr_id <- 2
   
   casename   <- glue("{last_obs + 1}_no_intervention_r{R_0}_s{seroprev}_lY{l_values$lY[arr_id]}_lR{l_values$lR[arr_id]}_mod")
   
@@ -151,7 +151,7 @@ if (arrayid == 2) {
   
 if (arrayid == 3) {
   
-  arr_id <- as.numeric(arrayid)
+  arr_id <- 3
   
   casename   <- glue("{last_obs + 1}_no_intervention_r{R_0}_s{seroprev}_lY{l_values$lY[arr_id]}_lR{l_values$lR[arr_id]}_mod")
   
@@ -190,7 +190,7 @@ if (arrayid == 3) {
 
 if (arrayid == 4) {
   
-  arr_id <- as.numeric(arrayid)
+  arr_id <- 4
   
   casename   <- glue("{last_obs + 1}_no_intervention_r{R_0}_s{seroprev}_lY{l_values$lY[arr_id]}_lR{l_values$lR[arr_id]}_mod")
   
@@ -229,7 +229,7 @@ if (arrayid == 4) {
 
 if (arrayid == 5) {
   
-  arr_id <- as.numeric(arrayid)
+  arr_id <- 5
   
   casename   <- glue("{last_obs + 1}_no_intervention_r{R_0}_s{seroprev}_lY{l_values$lY[arr_id]}_lR{l_values$lR[arr_id]}_mod")
   
@@ -268,7 +268,7 @@ if (arrayid == 5) {
 
 if (arrayid == 6) {
   
-  arr_id <- as.numeric(arrayid)
+  arr_id <- 6
   
   casename   <- glue("{last_obs + 1}_no_intervention_r{R_0}_s{seroprev}_lY{l_values$lY[arr_id]}_lR{l_values$lR[arr_id]}_mod")
   
@@ -307,7 +307,7 @@ if (arrayid == 6) {
 
 if (arrayid == 7) {
   
-  arr_id <- as.numeric(arrayid)
+  arr_id <- 7
   
   casename   <- glue("{last_obs + 1}_no_intervention_r{R_0}_s{seroprev}_lY{l_values$lY[arr_id]}_lR{l_values$lR[arr_id]}_mod")
   
@@ -346,7 +346,7 @@ if (arrayid == 7) {
 
 if (arrayid == 8) {
   
-  arr_id <- as.numeric(arrayid)
+  arr_id <- 8
   
   casename   <- glue("{last_obs + 1}_no_intervention_r{R_0}_s{seroprev}_lY{l_values$lY[arr_id]}_lR{l_values$lR[arr_id]}_mod")
   
@@ -385,7 +385,7 @@ if (arrayid == 8) {
 
 if (arrayid == 9) {
   
-  arr_id <- as.numeric(arrayid)
+  arr_id <- 9
   
   casename   <- glue("{last_obs + 1}_no_intervention_r{R_0}_s{seroprev}_lY{l_values$lY[arr_id]}_lR{l_values$lR[arr_id]}_mod")
   
