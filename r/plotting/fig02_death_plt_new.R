@@ -7,7 +7,7 @@ for (i in seq_along(f)) {source(here("src", f[i]))}
 
 start_date <- as.Date("2021-01-01")
 end_date <- as.Date("2021-06-30")
-r_0 <- 5
+r_0 <- 2
 
 # # use maharashtra pi schedule? use kerala cfr schedule? ----------
 mh <- TRUE
