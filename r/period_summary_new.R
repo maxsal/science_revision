@@ -4,19 +4,19 @@ library(tidyverse)
 
 get_cfr <- function(end_date = "2021-05-15") {
   
-  out <- fread("https://raw.githubusercontent.com/maxsal/science_revision/main/data/cfr_schedule_14day_lag.txt")[, date := as.Date(date)]
+  out <- fread("https://raw.githubusercontent.com/maxsal/science_revision/main/data/cfr_schedule_14day_lag.txt", showProgress = FALSE)[, date := as.Date(date)]
   
   return(out[date <= end_date])
   
 }
 
-generate_cfr <- function(end_date) {
+generate_cfr <- function(scen_start, end_date) {
   
   cfr <- get_cfr(end_date = end_date) %>%
     mutate(
-      cfr_mod  = case_when(date < as.Date(scen) ~ cfr_daily, T ~ cfr_mod),
-      cfr_high = case_when(date < as.Date(scen) ~ cfr_daily, T ~ cfr_high),
-      cfr_low  = case_when(date < as.Date(scen) ~ cfr_daily, T ~ cfr_low)
+      cfr_mod  = case_when(date < as.Date(scen_start) ~ cfr_daily, T ~ cfr_mod),
+      cfr_high = case_when(date < as.Date(scen_start) ~ cfr_daily, T ~ cfr_high),
+      cfr_low  = case_when(date < as.Date(scen_start) ~ cfr_daily, T ~ cfr_low)
     ) %>%
     mutate(
       cfr_mod  = replace(cfr_mod, date > end_date, 0),
@@ -24,32 +24,35 @@ generate_cfr <- function(end_date) {
       cfr_low  = replace(cfr_low, date > end_date, 0)
     ) %>%
     select(-cfr_daily) %>%
-    filter(date >= scen & date <= end_date) %>%
+    filter(date >= scen_start & date <= end_date) %>%
     .[[glue("cfr_{cfr_sched}")]]
   
 }
 
 period_summary <- function(
-  scen      = "2021-03-13_t3",
-  end_date  = "2021-05-15",
-  cfr_sched = "mod",
-  use_theta = TRUE,
-  use_adj_v = FALSE,
-  mh        = FALSE,
-  adj_len   = 2,
-  base_path = NULL,
-  N         = 1.34e9,
-  waning    = FALSE
+  scen       = "t3",
+  scen_start = as.Date("2021-03-13"),
+  end_date   = "2021-05-15",
+  cfr_sched  = "mod",
+  use_theta  = TRUE,
+  use_adj_v  = FALSE,
+  mh         = FALSE,
+  adj_len    = 2,
+  base_path  = NULL,
+  N          = 1.34e9,
+  waning     = FALSE
 ) {
 
   if (is.null(base_path)) {
     base_path <- "early_lockdown"
   }
   
+  scen_name <- glue("{scen_start}_{scen}")
+  
   if (waning == TRUE) {
-    load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen}_waning_forecast_MCMC.RData"))
+    load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen_name}_waning_forecast_MCMC.RData"))
   } else {
-    load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen}_forecast_MCMC.RData"))
+    load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen_name}_forecast_MCMC.RData"))
   }
 
   if (use_theta == FALSE) {
@@ -65,9 +68,9 @@ period_summary <- function(
   cumulative_draws <- i_compartment_draws + r_compartment_draws
   
   if (waning == TRUE) {
-    load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen}_waning_plot_data.RData"))
+    load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen_name}_waning_plot_data.RData"))
   } else {
-    load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen}_plot_data.RData"))
+    load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen_name}_plot_data.RData"))
   }
   
   other_plot        <- plot_data_ls[[2]]
@@ -77,16 +80,22 @@ period_summary <- function(
   removed_plot_ls   <- plot_data_ls[[5]]
   data_comp_R       <- removed_plot_ls[[3]]
   
-  tmp_d <- d %>% rename(date_ymd = date, total_confirmed = total_cases, total_deceased = total_deaths)
+  tmp_d <- fread("https://raw.githubusercontent.com/maxsal/science_revision/main/data/covid19india_national_counts_20211031.csv",
+                 showProgress = FALSE) %>%
+    rename(
+      date_ymd = date,
+      total_confirmed = total_cases,
+      total_deceased = total_deaths
+      )
   
-  period_cases  <- tmp_d %>% filter(date_ymd == end_date) %>% pull(total_confirmed) - tmp_d %>% filter(date_ymd == scen) %>% pull(total_confirmed)
-  period_deaths <- tmp_d %>% filter(date_ymd == end_date) %>% pull(total_deceased) - tmp_d %>% filter(date_ymd == scen) %>% pull(total_deceased)
+  period_cases  <- tmp_d %>% filter(date_ymd == end_date) %>% pull(total_confirmed) - tmp_d %>% filter(date_ymd == scen_start) %>% pull(total_confirmed)
+  period_deaths <- tmp_d %>% filter(date_ymd == end_date) %>% pull(total_deceased) - tmp_d %>% filter(date_ymd == scen_start) %>% pull(total_deceased)
   
   if (use_adj_v == TRUE) {
     # Computing scale-free adjustment factor
     
     ni_complete <-  tmp_d %>%
-      filter(date_ymd <= (as.Date(scen) - 1) & date_ymd >= (as.Date(scen) - 100)) %>%
+      filter(date_ymd <= (as.Date(scen_start) - 1) & date_ymd >= (as.Date(scen_start) - 100)) %>%
       pull(total_confirmed)
     adj_v <-mean(
       as.vector(ni_complete[(T_prime - adj_len):T_prime]) /
@@ -147,7 +156,7 @@ period_summary <- function(
 
   # Total cases during a period
   
-  t_pred <- length(seq.Date(from = as.Date(scen), to = as.Date(end_date), by = "day"))
+  t_pred <- length(seq.Date(from = as.Date(scen_start), to = as.Date(end_date), by = "day"))
   
   # T_Pred = 30 # Change to period length of interest accordingly
   
@@ -162,7 +171,7 @@ period_summary <- function(
   
   # Daily new deaths
   
-  cfr <- generate_cfr(end_date = end_date)
+  cfr <- generate_cfr(scen_start = scen_start, end_date = end_date)
 
   daily_deaths_draws <- data.frame(t(t(daily_new_draws[, 1:t_pred]) * cfr))
   
@@ -209,7 +218,7 @@ period_summary <- function(
   return(
     list(
       "specs" = tibble(
-        "start_date"   = scen,
+        "start_date"   = scen_start,
         "end_date"     = end_date,
         "cfr_schedule" = cfr_sched
       ),
