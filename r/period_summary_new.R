@@ -1,18 +1,38 @@
 library(data.table)
 library(janitor)
+library(tidyverse)
 
 get_cfr <- function(end_date = "2021-05-15") {
   
-  out <- fread("https://github.com/maxsal/science_revision/blob/main/data/cfr_schedule_14day_lag.txt")[, date := as.Date(date)]
+  out <- fread("https://raw.githubusercontent.com/maxsal/science_revision/main/data/cfr_schedule_14day_lag.txt")[, date := as.Date(date)]
   
   return(out[date <= end_date])
+  
+}
+
+generate_cfr <- function(end_date) {
+  
+  cfr <- get_cfr(end_date = end_date) %>%
+    mutate(
+      cfr_mod  = case_when(date < as.Date(scen) ~ cfr_daily, T ~ cfr_mod),
+      cfr_high = case_when(date < as.Date(scen) ~ cfr_daily, T ~ cfr_high),
+      cfr_low  = case_when(date < as.Date(scen) ~ cfr_daily, T ~ cfr_low)
+    ) %>%
+    mutate(
+      cfr_mod  = replace(cfr_mod, date > end_date, 0),
+      cfr_high = replace(cfr_high, date > end_date, 0),
+      cfr_low  = replace(cfr_low, date > end_date, 0)
+    ) %>%
+    select(-cfr_daily) %>%
+    filter(date >= scen & date <= end_date) %>%
+    .[[glue("cfr_{cfr_sched}")]]
   
 }
 
 period_summary <- function(
   scen      = "2021-03-13_t3",
   end_date  = "2021-05-15",
-  cfr_sched = "india",
+  cfr_sched = "mod",
   use_theta = TRUE,
   use_adj_v = FALSE,
   mh        = FALSE,
@@ -142,27 +162,7 @@ period_summary <- function(
   
   # Daily new deaths
   
-  cfr <- extract_cfr(end_date = end_date) %>%
-    select(
-      date,
-      cfr_daily = cfr,
-      cfr_india = cfr_t7,
-      cfr_mh    = cfr_mh_t7,
-      cfr_kl    = cfr_kl_t7
-    ) %>%
-    mutate(
-      cfr_india = case_when(date < as.Date(scen) ~ cfr_daily, T ~ cfr_india),
-      cfr_mh    = case_when(date < as.Date(scen) ~ cfr_daily, T ~ cfr_mh),
-      cfr_kl    = case_when(date < as.Date(scen) ~ cfr_daily, T ~ cfr_kl)
-    ) %>%
-    mutate(
-      cfr_india = replace(cfr_india, date > end_date, 0),
-      cfr_mh    = replace(cfr_mh, date > end_date, 0),
-      cfr_kl    = replace(cfr_kl, date > end_date, 0)
-    ) %>%
-    select(-cfr_daily) %>%
-    filter(date >= scen & date <= end_date) %>%
-      .[[glue("cfr_{cfr_sched}")]]
+  cfr <- generate_cfr(end_date = end_date)
 
   daily_deaths_draws <- data.frame(t(t(daily_new_draws[, 1:t_pred]) * cfr))
   
