@@ -3,9 +3,6 @@
 .RData
 .Ruserdata
 ./test/
-./data/
 test/
-data/
 test/*
-data/*
 slides/*
