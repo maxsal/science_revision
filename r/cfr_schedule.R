@@ -1,15 +1,14 @@
 library(data.table)
 library(janitor)
-library(covid19india)
 
-d       <- covid19india::get_nat_counts(mohfw = FALSE)
-d_state <- covid19india::get_state_counts(mohfw = FALSE)
+d       <- fread("data/covid19india_national_counts_20211031.csv")[, date := as.Date(date)]
+d_state <- fread("data/covid19india_state_counts_20211031.csv")[, date := as.Date(date)]
 
 extract_cfr <- function(end_date = "2021-05-15", day_lag = 14) {
   
   get_state_cfr <- function(abb) {
     
-    tmp_taco <- d_state[place == covid19india::pop[abbrev == abb, place]][
+    tmp_taco <- d_state[place == fread("data/population.csv")[abbrev == abb, place]][
       , cfr := daily_deaths / shift(daily_cases, n = day_lag)
     ][
       date == "2021-07-20", cfr := NA
@@ -19,7 +18,7 @@ extract_cfr <- function(end_date = "2021-05-15", day_lag = 14) {
       tmp_taco <- rbindlist(list(
         tmp_taco,
         data.table(
-          place = covid19india::pop[abbrev == abb, place],
+          place = fread("data/population")[abbrev == abb, place],
           date  = as.Date("2021-02-21")
         )
       ), fill = TRUE)[order(place, date)]
@@ -66,6 +65,6 @@ extract_cfr <- function(end_date = "2021-05-15", day_lag = 14) {
   
 }
 
-cfr_sched <- extract_cfr()[order(date), day := 1:.N][, .(day, cfr_mod = cfr_t7, cfr_high = cfr_mh_t7, cfr_low = cfr_kl_t7)][]
+cfr_sched <- extract_cfr(end_date = "2021-07-31")[order(date), day := 1:.N][, .(day, date, cfr_mod = cfr_t7, cfr_high = cfr_mh_t7, cfr_low = cfr_kl_t7)][]
 
 fwrite(cfr_sched, "~/Downloads/cfr_schedule.txt")
