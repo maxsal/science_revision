@@ -65,6 +65,6 @@ extract_cfr <- function(end_date = "2021-05-15", day_lag = 14) {
   
 }
 
-cfr_sched <- extract_cfr(end_date = "2021-07-31")[order(date), day := 1:.N][, .(day, date, cfr_mod = cfr_t7, cfr_high = cfr_mh_t7, cfr_low = cfr_kl_t7)][]
+cfr_sched <- extract_cfr(end_date = "2021-07-31")[order(date), day := 1:.N][, .(day, date, cfr_daily = cfr, cfr_mod = cfr_t7, cfr_high = cfr_mh_t7, cfr_low = cfr_kl_t7)][]
 
 # fwrite(cfr_sched, "~/Downloads/cfr_schedule.txt")
