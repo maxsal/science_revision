@@ -36,8 +36,8 @@ rayleigh           <- FALSE # not incorporating waning immunity
 if (rayleigh == TRUE) { sigma0 = 310 }
 
 ### Option for using seroprevalence estimate, default is to use theta prior as before.
-use_sero <- TRUE
-seroprev <- as.numeric(Sys.getenv("seroprev")) # January seroprevalence in India [Murhekar et al. 2021]
+use_sero <- FALSE
+# seroprev <- as.numeric(Sys.getenv("seroprev")) # January seroprevalence in India [Murhekar et al. 2021]
 
 ### Option for changing kappa and lambda prior precisions, all default to 0.0001.
 # kappaprec = as.numeric(Sys.getenv("kappaprec"))
@@ -88,7 +88,7 @@ if (arrayid == 1) {
       rayleigh = rayleigh,
       # sigma0 = sigma0,
       use_sero = use_sero,
-      seroprev = seroprev,
+      # seroprev = seroprev,
       # kappaprec = kappaprec,
       lambdaYprec = l_values$lY[arr_id],
       lambdaRprec = l_values$lR[arr_id],
@@ -127,7 +127,7 @@ if (arrayid == 2) {
     rayleigh = rayleigh,
     # sigma0 = sigma0,
     use_sero = use_sero,
-    seroprev = seroprev,
+    # seroprev = seroprev,
     # kappaprec = kappaprec,
     lambdaYprec = l_values$lY[arr_id],
     lambdaRprec = l_values$lR[arr_id],
@@ -166,7 +166,7 @@ if (arrayid == 3) {
     rayleigh = rayleigh,
     # sigma0 = sigma0,
     use_sero = use_sero,
-    seroprev = seroprev,
+    # seroprev = seroprev,
     # kappaprec = kappaprec,
     lambdaYprec = l_values$lY[arr_id],
     lambdaRprec = l_values$lR[arr_id],
@@ -205,7 +205,7 @@ if (arrayid == 4) {
     rayleigh = rayleigh,
     # sigma0 = sigma0,
     use_sero = use_sero,
-    seroprev = seroprev,
+    # seroprev = seroprev,
     # kappaprec = kappaprec,
     lambdaYprec = l_values$lY[arr_id],
     lambdaRprec = l_values$lR[arr_id],
@@ -244,7 +244,7 @@ if (arrayid == 5) {
     rayleigh = rayleigh,
     # sigma0 = sigma0,
     use_sero = use_sero,
-    seroprev = seroprev,
+    # seroprev = seroprev,
     # kappaprec = kappaprec,
     lambdaYprec = l_values$lY[arr_id],
     lambdaRprec = l_values$lR[arr_id],
@@ -283,7 +283,7 @@ if (arrayid == 6) {
     rayleigh = rayleigh,
     # sigma0 = sigma0,
     use_sero = use_sero,
-    seroprev = seroprev,
+    # seroprev = seroprev,
     # kappaprec = kappaprec,
     lambdaYprec = l_values$lY[arr_id],
     lambdaRprec = l_values$lR[arr_id],
@@ -361,7 +361,7 @@ if (arrayid == 8) {
     rayleigh = rayleigh,
     # sigma0 = sigma0,
     use_sero = use_sero,
-    seroprev = seroprev,
+    # seroprev = seroprev,
     # kappaprec = kappaprec,
     lambdaYprec = l_values$lY[arr_id],
     lambdaRprec = l_values$lR[arr_id],

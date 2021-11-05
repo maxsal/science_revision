@@ -6,7 +6,7 @@ for (i in seq_along(f)) {source(here("src", f[i]))}
 
 start_date <- as.Date("2021-01-01")
 end_date <- as.Date("2021-06-30")
-r_0      <- 5
+r_0      <- 2
 
 # load data ----------
 obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
