@@ -322,7 +322,7 @@ if (arrayid == 7) {
     rayleigh = rayleigh,
     # sigma0 = sigma0,
     use_sero = use_sero,
-    seroprev = seroprev,
+    # seroprev = seroprev,
     # kappaprec = kappaprec,
     lambdaYprec = l_values$lY[arr_id],
     lambdaRprec = l_values$lR[arr_id],
