@@ -1,12 +1,26 @@
 # libraries ----------
-ally::libri(tidyverse, lubridate, ggsci, ggrepel, janitor, glue, here,
-               ggtext, patchwork, data.table)
-f <- list.files(here("src"))
-for (i in seq_along(f)) {source(here("src", f[i]))}
+ally::libri(tidyverse, lubridate, ggsci, ggrepel, janitor, glue,
+            here, ggtext, patchwork, data.table)
 
 start_date <- as.Date("2021-01-01")
 end_date <- as.Date("2021-06-30")
-r_0      <- 2
+
+colors <- c(Observed = "#0b0c0c", `Tier 2` = "#e6811c", `Tier 3` = "#e0101a", 
+            `Tier 4` = "#9900d1", `Tier 4 - March 30` = "#9900d1", `Tier 4 - April 15` = "#9900d1")
+
+# helper functions --------------
+clean_scenario <- function(dat, p, stop_obs, scen, end_date = "2021-05-15") {
+  dat %>% 
+    filter(date <= stop_obs) %>% 
+    select(date, daily_deaths) %>% 
+    rename(incidence = daily_deaths) %>% 
+    add_row(p %>%  
+              filter(scenario == scen) %>% 
+              select(date, incidence) %>% 
+              drop_na()) %>% 
+    add_column(scenario = scen) %>%
+    filter(date <= end_date)
+}
 
 format_date <- function(x) {
   
@@ -14,42 +28,20 @@ format_date <- function(x) {
   
 }
 
-# load data ----------
-obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
-              col_types = cols()) %>%
-  clean_names() %>%
-  rename(
-    daily_cases  = daily_confirmed,
-    daily_deaths = daily_deceased,
-    total_cases  = total_confirmed,
-    total_deaths = total_deceased
-  ) %>%
-  select(-date) %>%
-  rename(date = date_ymd) %>%
-  filter(date >= start_date)
+# data -------------
+obs <- fread("data/covid19india_national_counts_20211031.csv")[, date := as.Date(date)][date >= start_date][]
 
-d1 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-13_t3_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-13", tier = "Tier 3", scenario = "Tier 3 - March 13")
-d2 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-19_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-19", tier = "Tier 4", scenario = "Tier 4 - March 19")
-d3 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-30_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-30", tier = "Tier 4", scenario = "Tier 4 - March 30")
-d4 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-04-15_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-04-15", tier = "Tier 4", scenario = "Tier 4 - April 15")
-d0 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_t2_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-02-19", tier = "Tier 2", scenario = "Tier 2 - February 19")
+t2   <- fread("seirfansy_data/Tier2_D.csv")[, .(N = V1, daily_deaths = value, date = dates)][, date := as.Date(date)][N > 100][, scenario := "Tier 2 - February 19"]
+t3   <- fread("seirfansy_data/Tier3_D.csv")[, .(N = V1, daily_deaths = value, date = dates)][, date := as.Date(date)][N > 100][, scenario := "Tier 3 - March 13"]
+t4_1 <- fread("seirfansy_data/Tier4_1_D.csv")[, .(N = V1, daily_deaths = value, date = dates)][, date := as.Date(date)][N > 100][, scenario := "Tier 4 - March 19"]
+t4_2 <- fread("seirfansy_data/Tier4_2_D.csv")[, .(N = V1, daily_deaths = value, date = dates)][, date := as.Date(date)][N > 100][, scenario := "Tier 4 - March 30"]
+t4_3 <- fread("seirfansy_data/Tier4_3_D.csv")[, .(N = V1, daily_deaths = value, date = dates)][, date := as.Date(date)][N > 100][, scenario := "Tier 4 - April 15"]
 
+p <- rbindlist(list(
+  t2, t3, t4_1, t4_2, t4_3
+))[, .(date, scenario, incidence = daily_deaths)]
 
-d <- bind_rows(
-  d0, d1, d2, d3, d4
-)
-
-p <- d %>% filter(scenario %in% c("Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15"))
-
-tmp_outname  <- glue("fig01_case_plot_new_r{r_0}.pdf")
-tmp_title    <- "Effect of different interventions at different times"
-
-# prepare data ----------
+# prepare data -----------
 clean_prep <- function(x) {
   
   none   <- obs %>% clean_scenario(p = x, stop_obs = end_date + 14, end_date = end_date + 14, scen = "No intervention")
@@ -92,7 +84,7 @@ clean_prep <- function(x) {
                      date >= "2021-03-21")) %>% 
     add_row(total.smoothed %>% 
               filter(scenario == "Tier 4 - April 15", 
-                     date >= "2021-04-06")) %>% 
+                     date >= "2021-04-08")) %>% 
     mutate(scenario = factor(scenario, levels = c("Observed", "Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15"))) %>%
     filter(date <= end_date) 
   
@@ -101,26 +93,7 @@ clean_prep <- function(x) {
 }
 
 total_smoothed_plot    <- clean_prep(x = p)
-# total_mh_smoothed_plot <- clean_prep(x = p_mh)
 
-obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
-                col_types = cols(), show_col_types = FALSE) %>%
-  clean_names() %>%
-  rename(
-    daily_cases  = daily_confirmed,
-    daily_deaths = daily_deceased,
-    total_cases  = total_confirmed,
-    total_deaths = total_deceased
-  ) %>%
-  select(-date) %>%
-  rename(date = date_ymd) %>%
-  filter(date >= "2021-02-01")
-
-
-# plot -----------
-strong_cols <- c(colores[["Observed"]], colores[["MH Pre-lock"]], colores[["Strong lockdown"]])
-
-## strong lockdown plot -----------
 tps <- as.data.table(total_smoothed_plot)
 tps[scenario == "Tier 2 - February 19", scenario := "Tier 2"]
 tps[scenario == "Tier 3 - March 13", scenario := "Tier 3"]
@@ -128,13 +101,12 @@ tps[scenario == "Tier 4 - March 19", scenario := "Tier 4"]
 tps[, scenario := factor(scenario, levels = c("Observed", "Tier 2", "Tier 3", "Tier 4",
                                               "Tier 4 - March 30", "Tier 4 - April 15"))]
 
-cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"][scenario == "Tier 4 - March 30", lt := "longdash"][scenario == "Tier 4 - April 15", lt := "dotted"][] %>%
+(deaths_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"][scenario == "Tier 4 - March 30", lt := "longdash"][scenario == "Tier 4 - April 15", lt := "dotted"][] %>%
   # filter(date >= "2021-02-01" & date <= end_date) %>%
   ggplot(aes(x = date, y = fitted)) + 
   geom_line(aes(color = scenario, linetype = lt), size = 1) +
   scale_linetype_identity() +
-  scale_color_manual(values = colores4) +
-  
+  scale_color_manual(values = colors) +
   # vertical lines
   geom_vline(data = tps[, .SD[date == min(date)], by = scenario][, .(scenario, date)][!(scenario %in% c("Observed", "No intervention"))],
              aes(xintercept = date, color = scenario),
@@ -143,9 +115,9 @@ cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"]
   # peak case count labels
   geom_label_repel(data = rbindlist(list(
     tps[, .SD[fitted == max(fitted)], by = scenario][, .(scenario, date, fitted)][!(scenario %in% c("Observed", "No intervention"))][, fitted_val := fitted][],
-    data.table(scenario = "Observed", date = as.Date("2021-05-03"), fitted = 414280, fitted_val = tps[scenario == "Observed" & date == "2021-05-03", fitted])), fill = TRUE),
-    aes(x = date, y = fitted_val, label = paste0(formatC(round(fitted), format="f", big.mark=",", digits=0), " cases"), color = scenario, family = "Arial"),
-    nudge_y = 100000,
+    data.table(scenario = "Observed", date = as.Date("2021-05-18"), fitted = 4529, fitted_val = tps[scenario == "Observed" & date == "2021-05-18", fitted])), fill = TRUE),
+    aes(x = date, y = fitted_val, label = paste0(formatC(round(fitted), format="f", big.mark=",", digits=0), " deaths"), color = scenario, family = "Helvetica"),
+    nudge_y = 500,
     nudge_x = -10,
     size = 3.5,
     show.legend = FALSE,
@@ -154,23 +126,28 @@ cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"]
   # date labels
   geom_text(data = tps[, .SD[date == min(date)], by = scenario][, .(scenario, date, fitted)][, `:=` (
     text = c("Observed data", "February 19\nModerate PHI\n(non-lockdown)\nR(t)>1", "March 13\nStrengthened PHI\n(non-lockdown)\nR(t)>1.2", "March 19\nModerate\nlockdown\nR(t)>1.4", "March 30\nModerate\nlockdown", "April 15\nModerate\nlockdown"), 
-    x    = as.Date(c("2021-04-10", "2021-02-09", "2021-03-03", "2021-03-11", "2021-03-22", "2021-04-07")), 
-    y    = c(125000, rep(350000, 5)) 
+    x    = as.Date(c("2021-04-22", "2021-02-09", "2021-03-03", "2021-03-11", "2021-03-23", "2021-04-09")), 
+    y    = c(2000, rep(4000, 5))
   )][],
-  aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Arial"),
+  aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Helvetica"),
   size = 3.5, hjust = c(0, 1, 1, 0, 0, 0), show.legend = FALSE) +
-  # guides(color = guide_legend(nrow = 1)) + 
-  labs(title    = tmp_title,
-       y        = "Daily cases",
-       x        = "",
-       color    = "Date of intervention") +
   
-  # other stuff
+    # guides(color = guide_legend(nrow = 1)) + 
+    labs(title    = "SEIRfansy predicted number of daily COVID-19 deaths under various interventions",
+         subtitle = glue("{format_date(start_date)} to {format_date(end_date)}"),
+         caption  = glue("**Notes:** Observations and prediction period until {format_date(end_date)}. ",
+                         "Figures in boxes show peak number of deaths for each intervention.<br>",
+                         "**\uA9 COV-IND-19 Study Group**"),
+         y        = "Daily deaths",
+         x        = "",
+         color    = "Date of intervention") +
+    
+    # other stuff
   scale_y_continuous(labels = scales::comma) +
   scale_x_date(date_labels = "%B", date_breaks = "1 month") +
   theme_classic() +
   theme(
-    text            = element_text(family = "Arial"),
+    text            = element_text(family = "Helvetica"),
     axis.text.x     = element_text(size = 11, vjust = 0.5),
     axis.text.y     = element_text(size = 11),
     axis.title.x    = element_text(size = 11, face = "bold"),
@@ -181,23 +158,12 @@ cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"]
     plot.title      = element_text(size = 14, face = "bold"),
     plot.subtitle   = element_text(size = 11, hjust = 0, color = "gray40"),
     plot.caption    = element_markdown(size = 10, hjust = 0)
-  )
-
-# combine plots -----------
-full_plt <- cases_p +
-  labs(
-    title    = "Predicted number of daily COVID-19 cases under various interventions",
-    subtitle = glue("{format_date(start_date)} to {format_date(end_date)}"),
-    caption  = glue("**Notes:** Observations and prediction period until {format_date(end_date)}. ",
-                    "Figures in boxes show peak number of cases for each intervention. Assumes starting R\u2080={r_0}.<br>\"R(t)\" in annotations represents trailing 7-day average effective reproduction number threshold.<br>",
-                    "**\uA9 COV-IND-19 Study Group**")
-  )
+  ))
 
 
 # save output ----------
-ggsave(filename = here("fig", tmp_outname),
-       plot     = full_plt,
+ggsave(filename = here("fig", "seirfansy_death_plot.pdf"),
+       plot     = deaths_p,
        height   = 5,
        width    = 15,
        units = "in", device = cairo_pdf)
-

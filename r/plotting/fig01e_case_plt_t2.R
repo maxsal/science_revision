@@ -6,7 +6,7 @@ for (i in seq_along(f)) {source(here("src", f[i]))}
 
 start_date <- as.Date("2021-01-01")
 end_date <- as.Date("2021-06-30")
-r_0      <- 5
+r_0      <- 2
 
 # load data ----------
 obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
@@ -40,7 +40,7 @@ d <- bind_rows(
 
 p <- d %>% filter(scenario %in% c("Tier 2 - February 19", "Tier 2 - March 13", "Tier 2 - March 19", "Tier 2 - March 30", "Tier 2 - April 15"))
 
-tmp_outname  <- glue("fig01_case_plot_t2_r{r_0}.pdf")
+tmp_outname  <- glue("fig01_case_plot_t2_r{r_0}")
 tmp_title    <- "Effect of different interventions at different times"
 
 # prepare data ----------
@@ -122,14 +122,15 @@ tps <- as.data.table(total_smoothed_plot)[, scenario := factor(scenario, levels 
 # tps[, scenario := factor(scenario, levels = c("Observed", "Tier 2", "Tier 3", "Tier 4",
 #                                               "Tier 4 - March 30", "Tier 4 - April 15"))]
 
-names(colores4) <- tps[, unique(scenario)]
+colors <- c("black", pal_lancet()(length(tps[, unique(scenario)]) - 1))
+names(colors) <- tps[, unique(scenario)]
+# names(colores4) <- tps[, unique(scenario)]
 
-cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"][scenario == "Tier 2 - March 30", lt := "longdash"][scenario == "Tier 2 - April 15", lt := "dotted"][] %>%
+cases_p <- tps[data.table::between(date, start_date, end_date)]%>%
   # filter(date >= "2021-02-01" & date <= end_date) %>%
   ggplot(aes(x = date, y = fitted)) + 
-  geom_line(aes(color = scenario, linetype = lt), size = 1) +
-  scale_linetype_identity() +
-  scale_color_manual(values = colores4) +
+  geom_line(aes(color = scenario), size = 1) +
+  scale_color_manual(values = colors) +
   
   # vertical lines
   geom_vline(data = tps[, .SD[date == min(date)], by = scenario][, .(scenario, date)][!(scenario %in% c("Observed", "No intervention"))],
@@ -140,21 +141,21 @@ cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"]
   geom_label_repel(data = rbindlist(list(
     tps[, .SD[fitted == max(fitted)], by = scenario][, .(scenario, date, fitted)][!(scenario %in% c("Observed", "No intervention"))][, fitted_val := fitted][],
     data.table(scenario = "Observed", date = as.Date("2021-05-03"), fitted = 414280, fitted_val = tps[scenario == "Observed" & date == "2021-05-03", fitted])), fill = TRUE),
-    aes(x = date, y = fitted_val, label = paste0(formatC(round(fitted), format="f", big.mark=",", digits=0), " cases"), color = scenario, family = "Lato"),
+    aes(x = date, y = fitted_val, label = paste0(formatC(round(fitted), format="f", big.mark=",", digits=0), " cases"), color = scenario, family = "Arial"),
     nudge_y = 100000,
     nudge_x = -10,
-    size = 4,
+    size = 3,
     show.legend = FALSE,
     segment.size = 1) +
   
   # date labels
-  geom_text(data = tps[, .SD[date == min(date)], by = scenario][, .(scenario, date, fitted)][, `:=` (
-    text = c("Observed data", "February 19\nModerate PHI\n(non-lockdown)", "March 13\nModerate PHI\n(non-lockdown)", "March 19\nModerate PHI\n(non-lockdown)", "March 30\nModerate PHI\n(non-lockdown)", "April 15\nModerate PHI\n(non-lockdown)"), 
+  geom_label(data = tps[, .SD[date == min(date)], by = scenario][, .(scenario, date, fitted)][, `:=` (
+    text = c("Observed data", "February 19\nModerate PHI\n(non-lockdown)\nR(t)>1", "March 13\nModerate PHI\n(non-lockdown)\nR(t)>1.2", "March 19\nModerate PHI\n(non-lockdown)\nR(t)>1.4", "March 30\nModerate PHI\n(non-lockdown)", "April 15\nModerate PHI\n(non-lockdown)"), 
     x    = as.Date(c("2021-04-10", "2021-02-09", "2021-03-03", "2021-03-11", "2021-03-22", "2021-04-07")), 
-    y    = c(125000, rep(350000, 5)) 
+    y    = c(125000, rep(tps[, max(fitted)]*0.9, 3), tps[, max(fitted)]*0.65, tps[, max(fitted)]*0.9) 
   )][],
-  aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Lato"),
-  size = 4, hjust = c(0, 1, 1, 0, 0, 0), show.legend = FALSE) +
+  aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Arial"),
+  size = 3, hjust = c(0, 1, 1, 0, 0, 0), show.legend = FALSE) +
   guides(color = guide_legend(nrow = 1)) + 
   labs(title    = tmp_title,
        y        = "Daily cases",
@@ -166,7 +167,7 @@ cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"]
   scale_x_date(date_labels = "%B", date_breaks = "1 month") +
   theme_classic() +
   theme(
-    text            = element_text(family = "Lato"),
+    text            = element_text(family = "Arial"),
     axis.text.x     = element_text(size = 11, vjust = 0.5),
     axis.text.y     = element_text(size = 11),
     axis.title.x    = element_text(size = 11, face = "bold"),
@@ -185,15 +186,20 @@ full_plt <- cases_p +
     title    = "Predicted number of daily COVID-19 cases under various interventions",
     subtitle = glue("{format(start_date, '%B %e, %Y')} to {format(end_date, '%B %e, %Y')}"),
     caption  = glue("**Notes:** Observations and prediction period until {format(end_date, '%B %e, %Y')}. ",
-                    "Figures in boxes show peak number of cases for each intervention. Assumes starting R\u2080={r_0}.<br>",
+                    "Figures in boxes show peak number of cases for each intervention. Assumes starting R\u2080={r_0}.<br>\"R(t)\" in annotations represents trailing 7-day average effective reproduction number threshold.<br>",
                     "**\uA9 COV-IND-19 Study Group**")
   )
 
 
 # save output ----------
-ggsave(filename = here("fig", tmp_outname),
+ggsave(filename = here("fig", "sensitivity", glue("{tmp_outname}.pdf")),
        plot     = full_plt,
        height   = 5,
        width    = 15,
        units = "in", device = cairo_pdf)
+ggsave(filename = here("fig", "sensitivity", glue("{tmp_outname}.png")),
+       plot     = full_plt,
+       height   = 5,
+       width    = 15,
+       units = "in", dpi = 320, device = png)
 

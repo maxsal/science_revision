@@ -35,5 +35,5 @@ d |>
     title = glue("pi = {scen}; r0 = {r_0}")
   )
 
-ggsave(filename = glue("~/Downloads/change_time_p{scen}_r{r_0}.pdf"),
+ggsave(filename = glue("fig/sensitivity/change_time_p{scen}_r{r_0}.pdf"),
        width = 7, height = 5, device = cairo_pdf)

@@ -1,6 +1,7 @@
 # libraries ------------
 library(data.table)
 library(ggplot2)
+library(ggsci)
 
 source("src/colores.R")
 
@@ -74,8 +75,8 @@ all_pis <- rbindlist(list(
 ), fill = TRUE, use.names = TRUE)
 
 use_colors <- c(
-  "Mumbai PHI 2021" = "blue",
-  "Delhi PHI 2021" = "green",
+  "Mumbai PHI 2021" = pal_lancet()(3)[1],
+  "Delhi PHI 2021" = pal_lancet()(3)[3],
   "Moderate PHI" = colores4[["Tier 2"]],
   "Strengthened PHI" = colores4[["Tier 3"]],
   "Moderate lockdown" = colores4[["Tier 4"]],
@@ -92,3 +93,4 @@ use_colors <- c(
   ))
 
 ggsave("fig/response/alternate_pis.pdf", plot = pi_plot, width = 7, height = 5, device = cairo_pdf)
+ggsave("fig/response/alternate_pis.png", plot = pi_plot, width = 7, height = 5, units = "in", dpi = 320, device = png)
