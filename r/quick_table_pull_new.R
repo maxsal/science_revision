@@ -3,7 +3,7 @@ ally::libri(tidyverse, glue, here, janitor, data.table)
 source(here("r", "period_summary_new.R"))
 
 r_0       <- 2
-cfr_sched <- "mod"
+cfr_sched <- "high"
 mh        <- FALSE
 wane      <- FALSE
 

@@ -4,7 +4,7 @@ library(tidyverse)
 
 get_cfr <- function(end_date = "2021-05-15") {
   
-  out <- fread("https://raw.githubusercontent.com/maxsal/science_revision/main/data/cfr_schedule_14day_lag.txt", showProgress = FALSE)[, date := as.Date(date)]
+  out <- fread("data/cfr_schedule_14day_lag.txt")[, date := as.Date(date)]
   
   return(out[date <= end_date])
   
@@ -14,18 +14,17 @@ generate_cfr <- function(scen_start, end_date) {
   
   cfr <- get_cfr(end_date = end_date) %>%
     mutate(
-      cfr_mod  = case_when(date < as.Date(scen_start) ~ cfr_daily, T ~ cfr_mod),
-      cfr_high = case_when(date < as.Date(scen_start) ~ cfr_daily, T ~ cfr_high),
-      cfr_low  = case_when(date < as.Date(scen_start) ~ cfr_daily, T ~ cfr_low)
+      cfr_mod_smooth  = case_when(date < as.Date(scen_start) ~ cfr_mod_daily, T ~ cfr_mod_smooth),
+      cfr_high_smooth = case_when(date < as.Date(scen_start) ~ cfr_mod_daily, T ~ cfr_high_smooth),
+      cfr_low_smooth  = case_when(date < as.Date(scen_start) ~ cfr_mod_daily, T ~ cfr_low_smooth)
     ) %>%
     mutate(
-      cfr_mod  = replace(cfr_mod, date > end_date, 0),
-      cfr_high = replace(cfr_high, date > end_date, 0),
-      cfr_low  = replace(cfr_low, date > end_date, 0)
+      cfr_mod_smooth  = replace(cfr_mod_smooth, date > end_date, 0),
+      cfr_high_smooth = replace(cfr_high_smooth, date > end_date, 0),
+      cfr_low_smooth  = replace(cfr_low_smooth, date > end_date, 0)
     ) %>%
-    select(-cfr_daily) %>%
     filter(date >= scen_start & date <= end_date) %>%
-    .[[glue("cfr_{cfr_sched}")]]
+    .[[glue("cfr_{cfr_sched}_smooth")]]
   
 }
 

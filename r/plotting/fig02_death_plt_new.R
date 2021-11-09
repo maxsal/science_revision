@@ -58,7 +58,7 @@ m <- bind_rows(
 p <- m %>% filter(scenario %in% c("Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15"))
 
 # extract CFR schedule and get plot defaults -----------
-d <- extract_cfr(end_date = end_date)[date >= as.Date(start_date)]
+d <- fread("data/cfr_schedule_14day_lag.txt")[, date := as.Date(date)][date >= as.Date(start_date)]
 
 # prepare data -----------
 clean_prep <- function(x, var) {
@@ -116,9 +116,9 @@ clean_prep <- function(x, var) {
 }
 
 # tsp_india <- total_smoothed_plot
-tsp_india <- clean_prep(x = p, var = cfr_t7)
-tsp_mh    <- clean_prep(x = p, var = cfr_mh_t7)
-tsp_kl    <- clean_prep(x = p, var = cfr_kl_t7)
+tsp_india <- clean_prep(x = p, var = cfr_mod_smooth)
+tsp_mh    <- clean_prep(x = p, var = cfr_high_smooth)
+tsp_kl    <- clean_prep(x = p, var = cfr_low_smooth)
 
 make_tps <- function(x) {
   tmp <- as.data.table(x)
@@ -165,13 +165,22 @@ death_plt <- function(dat, title,
     show.legend = FALSE,
     segment.size = 1) + 
   
-  # date labels
-  geom_text(data = dat[, .SD[date == min(date)], by = scenario][, .(scenario, date, fitted)][, `:=` (
-    text = c("Observed data", "February 19\nTier II", "March 13\nTier III", "March 19\nTier IV", "March 30\nTier IV", "April 15\nTier IV"), 
-    x    = as.Date(c("2021-04-22", "2021-02-09", "2021-03-03", "2021-03-11", "2021-03-23", "2021-04-09")), 
-    y    = tmp_repel_y)][],
-  aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Lato"),
-  size = 4, hjust = c(0, 1, 1, 0, 0, 0), show.legend = FALSE) +
+    # date labels
+    geom_text(data = dat[, .SD[date == min(date)], by = scenario][, .(scenario, date, fitted)][, `:=` (
+      text = c("Observed data", "February 19\nModerate PHI\n(non-lockdown)\nR(t)>1", "March 13\nStrengthened PHI\n(non-lockdown)\nR(t)>1.2", "March 19\nModerate\nlockdown\nR(t)>1.4", "March 30\nModerate\nlockdown", "April 15\nModerate\nlockdown"), 
+      x    = as.Date(c("2021-04-22", "2021-02-09", "2021-03-03", "2021-03-11", "2021-03-23", "2021-04-09")), 
+      y    = tmp_repel_y 
+    )][],
+    aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Lato"),
+    size = 4, hjust = c(0, 1, 1, 0, 0, 0), show.legend = FALSE) +
+    
+  # # date labels
+  # geom_text(data = dat[, .SD[date == min(date)], by = scenario][, .(scenario, date, fitted)][, `:=` (
+  #   text = c("Observed data", "February 19\nTier II", "March 13\nTier III", "March 19\nTier IV", "March 30\nTier IV", "April 15\nTier IV"), 
+  #   x    = as.Date(c("2021-04-22", "2021-02-09", "2021-03-03", "2021-03-11", "2021-03-23", "2021-04-09")), 
+  #   y    = tmp_repel_y)][],
+  # aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Lato"),
+  # size = 4, hjust = c(0, 1, 1, 0, 0, 0), show.legend = FALSE) +
   
     # other stuff
   guides(color = guide_legend(nrow = 1)) + 
@@ -198,7 +207,7 @@ death_plt <- function(dat, title,
   }
 
 deaths_p    <- death_plt(dat = tps_india, title = "Moderate CFR")
-deaths_p_mh <- death_plt(dat = tps_mh, title = "High CFR")
+deaths_p_mh <- death_plt(dat = tps_mh, title = "High CFR", tmp_repel_y = c(2000, rep(10000, 5)))
 deaths_p_kl <- death_plt(dat = tps_kl, title = "Low CFR")
 
 patched <- deaths_p_mh / deaths_p / deaths_p_kl

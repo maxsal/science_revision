@@ -88,9 +88,9 @@ total_smoothed_plot    <- clean_prep(x = p)
 # plot -----------
 colores <- c(
   "Observed" = "black",
-  "4 weeks"  = colores4[[2]],
-  "6 weeks"  = colores4[[3]],
-  "8 weeks"  = colores4[[6]]
+  "4 weeks"  = pal_lancet()(3)[1],
+  "6 weeks"  = pal_lancet()(3)[2],
+  "8 weeks"  = pal_lancet()(3)[3]
 )
 
 cases_p <- total_smoothed_plot %>% 

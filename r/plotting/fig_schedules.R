@@ -38,22 +38,10 @@ pis <- bind_rows(pis, mh20_pis) %>%
     )
   )
 
-cfrs <- extract_cfr(end_date = end_date) |>
-  select(date, India = cfr_t7, Maharashtra = cfr_mh_t7,
-         Kerala = cfr_kl_t7) |>
-  pivot_longer(
-    names_to = "Location",
-    values_to = "CFR",
-    -date
-  ) %>%
-  filter(date <= end_date) %>%
-  mutate(
-    Location = case_when(
-      Location == "India" ~ "Moderate CFR",
-      Location == "Maharashtra" ~ "High CFR",
-      Location == "Kerala" ~ "Low CFR"
-    )
-  )
+cfrs <- melt.data.table(fread("data/cfr_schedule_14day_lag.txt")[, .(
+  date, "Moderate CFR" = cfr_mod_smooth, "High CFR" = cfr_high_smooth, "Low CFR" = cfr_low_smooth
+)], id.vars = "date", variable.name = "Location", value.name = "CFR")[date <= end_date]
+
 
 # make plots ----------
 pi_plt <- pis %>%

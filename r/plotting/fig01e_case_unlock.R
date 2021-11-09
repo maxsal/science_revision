@@ -131,7 +131,8 @@ obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
 
 
 # plot -----------
-strong_cols <- c(colores[["Observed"]], colores[["MH Pre-lock"]], colores[["Strong lockdown"]])
+strong_cols <- c(pal_lancet()(3)[1], pal_lancet()(3)[2], pal_lancet()(3)[3])
+# strong_cols <- c(colores[["Observed"]], colores[["MH Pre-lock"]], colores[["Strong lockdown"]])
 
 ## strong lockdown plot -----------
 tps <- as.data.table(total_smoothed_plot)
@@ -143,7 +144,7 @@ tps[, scenario := factor(scenario, levels = c("Observed", "Tier 2", "Tier 3", "T
 
 tps <- tps[scenario %in% c("Observed", "Tier 4", "Tier 4 - March 30", "Tier 4 - April 15")]
 
-colores4[4:6] <- colores4[2:4]
+colores4[4:6] <- c(pal_lancet()(3)[1], pal_lancet()(3)[2], pal_lancet()(3)[3])
 
 cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"][scenario == "Tier 4 - March 30", lt := "longdash"][scenario == "Tier 4 - April 15", lt := "dotted"][] %>%
   # filter(date >= "2021-02-01" & date <= end_date) %>%

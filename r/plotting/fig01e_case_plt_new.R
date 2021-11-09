@@ -1,5 +1,5 @@
 # libraries ----------
-pacman::p_load(tidyverse, lubridate, ggsci, ggrepel, janitor, glue, here,
+ally::libri(tidyverse, lubridate, ggsci, ggrepel, janitor, glue, here,
                ggtext, patchwork, data.table)
 f <- list.files(here("src"))
 for (i in seq_along(f)) {source(here("src", f[i]))}
@@ -147,13 +147,13 @@ cases_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"]
   
   # date labels
   geom_text(data = tps[, .SD[date == min(date)], by = scenario][, .(scenario, date, fitted)][, `:=` (
-    text = c("Observed data", "February 19\nModerate PHI\n(non-lockdown)", "March 13\nStrengthened PHI\n(non-lockdown)", "March 19\nModerate\nlockdown", "March 30\nModerate\nlockdown", "April 15\nModerate\nlockdown"), 
+    text = c("Observed data", "February 19\nModerate PHI\n(non-lockdown)\nR(t)>1", "March 13\nStrengthened PHI\n(non-lockdown)\nR(t)>1.2", "March 19\nModerate\nlockdown\nR(t)>1.4", "March 30\nModerate\nlockdown", "April 15\nModerate\nlockdown"), 
     x    = as.Date(c("2021-04-10", "2021-02-09", "2021-03-03", "2021-03-11", "2021-03-22", "2021-04-07")), 
     y    = c(125000, rep(350000, 5)) 
   )][],
   aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Lato"),
   size = 4, hjust = c(0, 1, 1, 0, 0, 0), show.legend = FALSE) +
-  guides(color = guide_legend(nrow = 1)) + 
+  # guides(color = guide_legend(nrow = 1)) + 
   labs(title    = tmp_title,
        y        = "Daily cases",
        x        = "",
@@ -183,7 +183,7 @@ full_plt <- cases_p +
     title    = "Predicted number of daily COVID-19 cases under various interventions",
     subtitle = glue("{format(start_date, '%B %e, %Y')} to {format(end_date, '%B %e, %Y')}"),
     caption  = glue("**Notes:** Observations and prediction period until {format(end_date, '%B %e, %Y')}. ",
-                    "Figures in boxes show peak number of cases for each intervention. Assumes starting R\u2080={r_0}.<br>",
+                    "Figures in boxes show peak number of cases for each intervention. Assumes starting R\u2080={r_0}.<br>\"R(t)\" in annotations represent trailing 7-day average effective reproduction number.<br>",
                     "**\uA9 COV-IND-19 Study Group**")
   )
 

@@ -1,9 +1,7 @@
 library(data.table)
 library(janitor)
 
-d       <- fread("https://raw.githubusercontent.com/maxsal/science_revision/main/data/covid19india_national_counts_20211031.csv", showProgress = FALSE)[, date := as.Date(date)]
-
-d <- d[daily_deaths == 6139, daily_deaths := (d[date == "2021-06-08", daily_deaths] + d[date == "2021-06-10", daily_deaths]) / 2][]
+d       <- fread("https://raw.githubusercontent.com/maxsal/science_revision/main/data/covid19india_national_counts_20211031.csv", showProgress = FALSE)[, date := as.Date(date)][daily_deaths == 6139, daily_deaths := (d[date == "2021-06-08", daily_deaths] + d[date == "2021-06-10", daily_deaths]) / 2][]
 d_state <- fread("https://raw.githubusercontent.com/maxsal/science_revision/main/data/covid19india_state_counts_20211031.csv", showProgress = FALSE)[, date := as.Date(date)]
 
 extract_cfr <- function(end_date = "2021-05-15", day_lag = 14) {
@@ -75,6 +73,9 @@ cfr_sched <- extract_cfr(end_date = "2021-07-31")[order(date), day := 1:.N][
   )
 ][]
 
+tmp_cfr <- fread("data/cfr_schedule_14day_lag.txt")
+
+cfr_sched <- merge.data.table(cfr_sched, tmp_cfr[, .(date, tmp_old_mod = cfr_mod)], by = "date")
 
 cfr_sched <- cfr_sched[, .(
   day, date,
@@ -83,40 +84,47 @@ cfr_sched <- cfr_sched[, .(
   cfr_low_daily = cfr_kl, cfr_low_t7 = cfr_kl_t7, cfr_low_smooth = cfr_kl_smooth
 )][]
 
-fwrite(cfr_sched, "data/cfr_schedule_14day_lag.txt")
+cfr_sched <- extract_cfr(end_date = "2021-07-31")[order(date), day := 1:.N][, .(day, date, cfr_daily = cfr, cfr_mod = cfr_t7, cfr_high = cfr_mh_t7, cfr_low = cfr_kl_t7)][]
 
-# compare with old schedule
+colors <- c(
+  "new_mod" = "#e0101a",
+  "old_mod" = "#e0101a",
+  "new_high" = "#9900d1",
+  "old_high" = "#9900d1",
+  "new_low" = "#e6811c",
+  "old_low" = "#e6811c"
+)
 
-# tmp <- fread("data/old/old_cfr_schedule_14day_lag.txt")
-# 
-# d <- merge.data.table(
-# cfr_sched[, .(date, new_mod = cfr_mod_smooth, new_high = cfr_high_smooth, new_low = cfr_low_smooth)],
-# tmp[, .(date, old_mod = cfr_mod, old_high = cfr_high, old_low = cfr_low)],
-# by = "date"
-# )
-# colors <- c(
-#   "new_mod" = "#e0101a",
-#   "old_mod" = "#e0101a",
-#   "new_high" = "#9900d1",
-#   "old_high" = "#9900d1",
-#   "new_low" = "#e6811c",
-#   "old_low" = "#e6811c"
-# )
-# 
-# melt(d,
-#      id.vars = "date")[, `:=` (lt = "solid", sz = 1)][variable %in% c("old_mod", "old_high", "old_low"), `:=` (lt = "dashed", sz = 0.5)] |>
-#   ggplot(aes(x = date, y = value, color = variable, linetype = lt)) +
-#   geom_line(aes(size = sz)) +
-#   scale_color_manual(values = colors) +
-#   scale_linetype_identity() +
-#   scale_size_identity() +
-#   scale_y_continuous(labels = scales::percent) +
-#   labs(
-#     title = "New and old CFR schedules",
-#     x = "Date",
-#     y = "Case-fatality rate",
-#     caption = "New CFR schedules are represents by solid lines; old CFR schedules are represented by dashed lines.<br>New schedules are LOESS-smoothed daily CFRs with span = 0.3; old schedules were trailing 7-day averages.<br>Daily cases are lagged 14 days in calculation of daily CFR."
-#   )
-# ggsave("~/Downloads/compare_old_new_cfr_schedules.pdf",
-#        width = 7, height = 5, device = cairo_pdf)
+melt(cfr_sched[, .(date, new_mod = cfr_mod_smooth, new_high = cfr_high_smooth, new_low = cfr_low_smooth,
+        old_mod = tmp_old_mod, old_high = cfr_high_t7, old_low = cfr_low_t7)],
+     id.vars = "date")[, `:=` (lt = "solid", sz = 1)][variable %in% c("old_mod", "old_high", "old_low"), `:=` (lt = "dashed", sz = 0.5)] |>
+  ggplot(aes(x = date, y = value, color = variable, linetype = lt)) +
+  geom_line(aes(size = sz)) +
+  scale_color_manual(values = colors) +
+  scale_linetype_identity() +
+  scale_size_identity() +
+  scale_y_continuous(labels = scales::percent) +
+  labs(
+    title = "New and old CFR schedules",
+    x = "Date",
+    y = "Case-fatality rate",
+    caption = "New CFR schedules are represents by solid lines; old CFR schedules are represented by dashed lines.<br>New schedules are LOESS-smoothed daily CFRs with span = 0.3; old schedules were trailing 7-day averages."
+  )
 
+
+cfr_sched <- extract_cfr(end_date = "2021-07-31")[order(date), day := 1:.N][
+  , `:=` (
+    cfr_smooth = predict(loess(cfr ~ day, span = 0.3)),
+    cfr_mh_smooth = predict(loess(cfr_mh ~ day, span = 0.3)),
+    cfr_kl_smooth = predict(loess(cfr_kl ~ day, span = 0.3))
+  )
+][]
+
+cfr_sched <- cfr_sched[, .(
+  day, date,
+  cfr_mod_daily = cfr, cfr_mod_t7 = cfr_t7, cfr_mod_smooth = cfr_smooth,
+  cfr_high_daily = cfr_mh, cfr_high_t7 = cfr_mh_t7, cfr_high_smooth = cfr_mh_smooth,
+  cfr_low_daily = cfr_kl, cfr_low_t7 = cfr_kl_t7, cfr_low_smooth = cfr_kl_smooth
+)][]
+
+fwrite(cfr_sched, "~/Downloads/cfr_schedule_14day_lag.txt")
