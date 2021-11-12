@@ -11,7 +11,7 @@ india <- get_nat_counts(mohfw = FALSE)
 
 india <- get_r0(india)[, .(place, date, r)][, r_t7 := frollmean(r, n = 7)][between(date, start, end)]
 
-india %>%
+(r_plot <- india %>%
   ggplot(aes(x = date, y = r_t7)) +
   annotate(geom = "rect", xmin = min(india[, date]), xmax = max(india[, date]), ymin = 1, ymax = 1.2, fill = "orange", alpha = 0.5) +
   annotate(geom = "rect", xmin = min(india[, date]), xmax = max(india[, date]), ymin = 1.2, ymax = 1.4, fill = "red", alpha = 0.5) +
@@ -36,15 +36,16 @@ india %>%
     subtitle = paste0(format(start, '%B %e, %Y'), " to ", format(end, '%B %e, %Y')),
     x        = "Date",
     y        = "Trailing 7-day average R"
-  )
+  ))
 
 ggsave(
-  filename = here("fig", "annotated_r.pdf"),
+  filename = "fig/annotated_r.pdf",
+  plot = r_plot,
   width = 9, height = 5,
   device = cairo_pdf
 )
 
 ggsave(
-  filename = here("fig", "annotated_r.png"),
+  filename = "fig/annotated_r.png",
   width = 9, height = 5, units = "in", dpi = 320
 )

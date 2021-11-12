@@ -1,8 +1,8 @@
-pacman::p_load(tidyverse, glue, here, janitor, zoo)
+ally::libri(tidyverse, glue, here, janitor, zoo)
 
 source(here("r", "period_summary_new.R"))
 
-cfr_sched <- "india"
+cfr_sched <- "mod"
 mh        <- FALSE
 wane      <- FALSE
 
@@ -10,30 +10,30 @@ cfr_type  <- ifelse(cfr_sched == "india", "mod", ifelse(cfr_sched == "mh", "high
 le_type   <- ifelse(mh == TRUE, "mod", ifelse(mh == FALSE, "strong", NA))
 wane_type <- ifelse(wane == TRUE, "wane", "main")
 
-mar_13_mar_30 <- period_summary(scen = "2021-03-13_t5", end_date = "2021-03-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_13_apr_15 <- period_summary(scen = "2021-03-13_t5", end_date = "2021-04-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_13_apr_30 <- period_summary(scen = "2021-03-13_t5", end_date = "2021-04-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_13_may_15 <- period_summary(scen = "2021-03-13_t5", end_date = "2021-05-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_13_may_30 <- period_summary(scen = "2021-03-13_t5", end_date = "2021-05-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_13_jun_15 <- period_summary(scen = "2021-03-13_t5", end_date = "2021-06-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_13_mar_30 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-13"), end_date = "2021-03-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_13_apr_15 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-13"), end_date = "2021-04-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_13_apr_30 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-13"), end_date = "2021-04-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_13_may_15 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-13"), end_date = "2021-05-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_13_may_30 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-13"), end_date = "2021-05-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_13_jun_15 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-13"), end_date = "2021-06-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
 
-mar_19_mar_30 <- period_summary(scen = "2021-03-19_t5", end_date = "2021-03-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_19_apr_15 <- period_summary(scen = "2021-03-19_t5", end_date = "2021-04-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_19_apr_30 <- period_summary(scen = "2021-03-19_t5", end_date = "2021-04-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_19_may_15 <- period_summary(scen = "2021-03-19_t5", end_date = "2021-05-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_19_may_30 <- period_summary(scen = "2021-03-19_t5", end_date = "2021-05-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_19_jun_15 <- period_summary(scen = "2021-03-19_t5", end_date = "2021-06-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_19_mar_30 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-19"), end_date = "2021-03-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_19_apr_15 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-19"), end_date = "2021-04-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_19_apr_30 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-19"), end_date = "2021-04-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_19_may_15 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-19"), end_date = "2021-05-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_19_may_30 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-19"), end_date = "2021-05-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_19_jun_15 <- period_summary(scen = "t5", scen_start = as.Date("2021-03-19"), end_date = "2021-06-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
 
-mar_30_apr_15 <- period_summary(scen = "2021-03-30_smooth1", end_date = "2021-04-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_30_apr_30 <- period_summary(scen = "2021-03-30_smooth1", end_date = "2021-04-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_30_may_15 <- period_summary(scen = "2021-03-30_smooth1", end_date = "2021-05-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_30_may_30 <- period_summary(scen = "2021-03-30_smooth1", end_date = "2021-05-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
-mar_30_jun_15 <- period_summary(scen = "2021-03-30_smooth1", end_date = "2021-06-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_30_apr_15 <- period_summary(scen = "smooth1", scen_start = as.Date("2021-03-30"), end_date = "2021-04-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_30_apr_30 <- period_summary(scen = "smooth1", scen_start = as.Date("2021-03-30"), end_date = "2021-04-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_30_may_15 <- period_summary(scen = "smooth1", scen_start = as.Date("2021-03-30"), end_date = "2021-05-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_30_may_30 <- period_summary(scen = "smooth1", scen_start = as.Date("2021-03-30"), end_date = "2021-05-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
+mar_30_jun_15 <- period_summary(scen = "smooth1", scen_start = as.Date("2021-03-30"), end_date = "2021-06-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
 
-apr_15_apr_30 <- period_summary(scen = "2021-04-15_smooth1", end_date = "2021-04-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
-apr_15_may_15 <- period_summary(scen = "2021-04-15_smooth1", end_date = "2021-05-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
-apr_15_may_30 <- period_summary(scen = "2021-04-15_smooth1", end_date = "2021-05-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
-apr_15_jun_15 <- period_summary(scen = "2021-04-15_smooth1", end_date = "2021-06-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
+apr_15_apr_30 <- period_summary(scen = "smooth1", scen_start = as.Date("2021-04-15"), end_date = "2021-04-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
+apr_15_may_15 <- period_summary(scen = "smooth1", scen_start = as.Date("2021-04-15"), end_date = "2021-05-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
+apr_15_may_30 <- period_summary(scen = "smooth1", scen_start = as.Date("2021-04-15"), end_date = "2021-05-30", waning = wane, cfr_sched = cfr_sched, mh = mh)
+apr_15_jun_15 <- period_summary(scen = "smooth1", scen_start = as.Date("2021-04-15"), end_date = "2021-06-15", waning = wane, cfr_sched = cfr_sched, mh = mh)
 
 print_cases <- function(x) {
   

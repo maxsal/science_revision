@@ -51,7 +51,11 @@ period_summary <- function(
   if (waning == TRUE) {
     load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen_name}_waning_forecast_MCMC.RData"))
   } else {
-    load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen_name}_forecast_MCMC.RData"))
+    if (scen %in% c("t5", "smooth1")) {
+      load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen_name}_mcmc.RData"))
+    } else {
+      load(glue("/Volumes/tiny/projects/covid/science_revision/data/{base_path}/{scen_name}_forecast_MCMC.RData"))
+    }
   }
 
   if (use_theta == FALSE) {

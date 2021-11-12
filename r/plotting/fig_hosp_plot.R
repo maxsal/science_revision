@@ -23,7 +23,7 @@ start_date <- "2021-01-01"
 end_date   <- "2021-06-30"
 
 # data ------------
-dat <- fread("data/covid19india_national_counts_20211029.csv")
+dat <- fread("data/covid19india_national_counts_20211031.csv")
 
 dat <- dat[, active_cases := (total_cases - total_recovered) / 10000][
   , `:=` (hosp_cases = active_cases * hosp_rate, icu_cases = active_cases * (hosp_rate * icu_rate), scenario = "Observed", date = as.Date(date))][]
@@ -66,35 +66,35 @@ extracto <- function(x, start = as.Date("2021-02-19"), l_out = 199,
 
 #### early intervention -----------
 feb_19 <- extracto(
-  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_smooth1_mcmc.RData",
+  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_t2_r2_forecast_MCMC.RData",
   start = as.Date("2021-02-19"),
   scen  = "Tier II\n(February 19)",
   sp    = 0.15
   )
 
 mar_13 <- extracto(
-  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-13_t3_mcmc.RData",
+  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-13_t3_r2_forecast_MCMC.RData",
   start = as.Date("2021-03-13"),
   scen  = "Tier III\n(March 13)",
   sp    = 0.15
 )
 
 mar_19 <- extracto(
-  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-19_t4_mcmc.RData",
+  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-19_t4_r2_forecast_MCMC.RData",
   start = as.Date("2021-03-19"),
   scen  = "Tier IV\n(March 19)",
   sp    = 0.15
 )
 
 mar_30 <- extracto(
-  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-30_smooth1_mh_mcmc.RData",
+  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-30_t4_r2_forecast_MCMC.RData",
   start = as.Date("2021-03-30"),
   scen  = "Tier IV\n(March 30)",
   sp    = 0.15
 )
 
 apr_15 <- extracto(
-  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-04-15_smooth1_mh_mcmc.RData",
+  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-04-15_t4_r2_forecast_MCMC.RData",
   start = as.Date("2021-04-15"),
   scen  = "Tier IV\n(April 15)",
   sp    = 0.15
@@ -150,7 +150,7 @@ hosp_plot <- plot_dat |>
   scale_y_continuous(labels = scales::comma) +
   theme_classic() +
   ggplot2::theme(
-    text            = ggplot2::element_text(family = "Lato"),
+    text            = ggplot2::element_text(family = "Helvetica Neue"),
     legend.position = "top",
     legend.title    = ggplot2::element_blank(),
     plot.title      = ggplot2::element_text(face = "bold", hjust = 0),
@@ -177,7 +177,7 @@ icu_plot <- plot_dat |>
   scale_y_continuous(labels = scales::comma) +
   theme_classic() +
   ggplot2::theme(
-    text            = ggplot2::element_text(family = "Lato"),
+    text            = ggplot2::element_text(family = "Helvetica Neue"),
     legend.position = "top",
     legend.title    = ggplot2::element_blank(),
     plot.title      = ggplot2::element_text(face = "bold", hjust = 0),
@@ -194,10 +194,20 @@ full_plot <- patched +
   )  &
   theme(
     plot.tag.position = c(0, 1),
-    plot.tag          = element_text(size = 18, hjust = 0, vjust = 1, family = "Lato", face = "bold")
+    plot.tag          = element_text(size = 18, hjust = 0, vjust = 1, family = "Helvetica Neue", face = "bold")
   )
 
-cairo_pdf(filename = here("fig", "hospital_capacity_plot.pdf"), width = 8, height = 7)
-print(full_plot)
-dev.off()
+ggsave(
+  filename = "fig/hospital_capacity_plot.pdf",
+  plot = full_plot,
+  width = 8, height = 7,
+  device = cairo_pdf
+)
+
+ggsave(
+  filename = "fig/hospital_capacity_plot.png",
+  plot = full_plot,
+  width = 8, height = 7, units = "in", dpi = 320,
+  device = png
+)
 

@@ -52,16 +52,22 @@ ratio <- data.table(
   ratio = theta_i_r / y_i_r
 )
 
-ratio |>
+(ratio_plot <- ratio |>
   ggplot(aes(x = date, y = ratio)) +
   geom_line(size = 1) +
   labs(
     title = "No intevention starting March 19, r0 = 2",
     x = "Date",
-    y = "I+R Ratio [\u0398] / Y",
-    caption = glue("file: {file}")
+    y = "I+R Ratio [\u0398] / Y"
   ) +
-  theme(text = element_text(family = "Arial"))
+  theme(text = element_text(family = "Helvetica Neue")))
 
-ggsave(filename = "~/Downloads/theta_y_no_int_r2_prod_ratio_plot.pdf",
+tag <- ifelse(fldr == "data", "prod", "test")
+
+ggsave(filename = glue("fig/sensitivity/theta_y_no_int_r{r_0}_{tag}_ratio_plot.pdf"),
+       plot = ratio_plot,
        width = 7, height = 5, device = cairo_pdf)
+
+ggsave(filename = glue("fig/sensitivity/theta_y_no_int_r{r_0}_{tag}_ratio_plot.png"),
+       plot = ratio_plot, units = "in", dpi = 320,
+       width = 7, height = 5, device = png)
