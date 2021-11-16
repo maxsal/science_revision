@@ -56,9 +56,11 @@ ratio <- data.table(
   ggplot(aes(x = date, y = ratio)) +
   geom_line(size = 1) +
   labs(
-    title = "No intevention starting March 19, r0 = 2",
+    title = "Ratio of latent \u0398 / Y",
+    subtitle = glue("{format_date(min(ratio[, date]))} to {format_date(max(ratio[, date]))}"),
     x = "Date",
-    y = "I+R Ratio [\u0398] / Y"
+    y = "I+R Ratio [\u0398 / Y]",
+    caption = glue("**Notes:** This is a no intervention eSIR model beginning {format_date(min(ratio[, date]))} trained on trailing 100 days of data.<br>Ratio is of the median of I+R compartenment draws.")
   ) +
   theme(text = element_text(family = "Helvetica Neue")))
 

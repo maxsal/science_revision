@@ -116,7 +116,7 @@ tps[, scenario := factor(scenario, levels = c("Observed", "Tier 2", "Tier 3", "T
   geom_label_repel(data = rbindlist(list(
     tps[, .SD[fitted == max(fitted)], by = scenario][, .(scenario, date, fitted)][!(scenario %in% c("Observed", "No intervention"))][, fitted_val := fitted][],
     data.table(scenario = "Observed", date = as.Date("2021-05-18"), fitted = 4529, fitted_val = tps[scenario == "Observed" & date == "2021-05-18", fitted])), fill = TRUE),
-    aes(x = date, y = fitted_val, label = paste0(formatC(round(fitted), format="f", big.mark=",", digits=0), " deaths"), color = scenario, family = "Helvetica"),
+    aes(x = date, y = fitted_val, label = paste0(formatC(round(fitted), format="f", big.mark=",", digits=0), " deaths"), color = scenario, family = "Helvetica Neue"),
     nudge_y = 500,
     nudge_x = -10,
     size = 3.5,
@@ -147,7 +147,7 @@ tps[, scenario := factor(scenario, levels = c("Observed", "Tier 2", "Tier 3", "T
   scale_x_date(date_labels = "%B", date_breaks = "1 month") +
   theme_classic() +
   theme(
-    text            = element_text(family = "Helvetica"),
+    text            = element_text(family = "Helvetica Neue"),
     axis.text.x     = element_text(size = 11, vjust = 0.5),
     axis.text.y     = element_text(size = 11),
     axis.title.x    = element_text(size = 11, face = "bold"),
@@ -162,7 +162,7 @@ tps[, scenario := factor(scenario, levels = c("Observed", "Tier 2", "Tier 3", "T
 
 
 # save output ----------
-ggsave(filename = here("fig", "seirfansy_death_plot.pdf"),
+ggsave(filename = "fig/seirfansy/seirfansy_death_plot.pdf",
        plot     = deaths_p,
        height   = 5,
        width    = 15,
