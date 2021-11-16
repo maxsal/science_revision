@@ -57,7 +57,7 @@ pi_plt <- pis %>%
   scale_color_manual(values = cols_1) +
   theme_classic() +
   theme(
-    text            = element_text(family = "Lato"),
+    text            = element_text(family = "Helvetica Neue"),
     axis.text.x     = element_text(size = 9, vjust = 0.5),
     axis.text.y     = element_text(size = 9),
     axis.title.x    = element_text(size = 9, face = "bold"),
@@ -84,7 +84,7 @@ cfr_plt <- cfrs %>%
   scale_color_manual(values = cols_2) +
   theme_classic() +
   theme(
-    text            = element_text(family = "Lato"),
+    text            = element_text(family = "Helvetica Neue"),
     axis.text.x     = element_text(size = 9, vjust = 0.5),
     axis.text.y     = element_text(size = 9),
     axis.title.x    = element_text(size = 9, face = "bold"),
@@ -108,12 +108,12 @@ full_plt <- patched +
     tag_levels = c("A")
   ) &
   theme(
-    text              = element_text(family = "Lato"),
+    text              = element_text(family = "Helvetica Neue"),
     plot.title        = element_text(size = 14, face = "bold"),
     plot.subtitle     = element_text(size = 12, hjust = 0, color = "gray40"),
     plot.caption      = element_markdown(size = 8, hjust = 0),
     plot.tag.position = c(0, 1),
-    plot.tag          = element_text(size = 14, hjust = 0, vjust = 1, family = "Lato", face = "bold")
+    plot.tag          = element_text(size = 14, hjust = 0, vjust = 1, family = "Helvetica Neue", face = "bold")
   )
 
 ggsave(filename = here("fig", "fig_schedules.pdf"),

@@ -151,7 +151,7 @@ cases_p <- tsp[, lt := "solid"][scenario == "Tier 4 - March 30", lt := "longdash
                         y = fitted_val, 
                         label = paste0(formatC(round(fitted), format="f", big.mark=",", digits=0), " cases"),
                         color = scenario,
-                        family = "Lato"), 
+                        family = "Helvetica Neue"), 
                    nudge_y = 100000, 
                    nudge_x = -10, 
                    size = 4, 
@@ -162,7 +162,7 @@ cases_p <- tsp[, lt := "solid"][scenario == "Tier 4 - March 30", lt := "longdash
     x    = as.Date(c("2021-04-10", "2021-02-07", "2021-03-05", "2021-03-13", "2021-03-24", "2021-04-09")), 
     y    = c(125000, rep(350000, 5)) 
   )][],
-  aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Lato"),
+  aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Helvetica Neue"),
   size = 4, hjust = c(0, 1, 1, 0, 0, 0), show.legend = FALSE) +
   guides(color = guide_legend(nrow = 1)) + 
   labs(title    = tmp_title,
@@ -173,7 +173,7 @@ cases_p <- tsp[, lt := "solid"][scenario == "Tier 4 - March 30", lt := "longdash
   scale_x_date(date_labels = "%B") +
   theme_classic() +
   theme(
-    text            = element_text(family = "Lato"),
+    text            = element_text(family = "Helvetica Neue"),
     axis.text.x     = element_text(size = 11, vjust = 0.5),
     axis.text.y     = element_text(size = 11),
     axis.title.x    = element_text(size = 11, face = "bold"),

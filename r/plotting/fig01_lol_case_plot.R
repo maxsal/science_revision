@@ -116,7 +116,7 @@ cases_p <- total_smoothed_plot %>%
                         y = fitted, 
                         label = paste0(formatC(round(fitted), format="f", big.mark=",", digits=0), " cases"),
                         color = scenario,
-                        family = "Lato"), 
+                        family = "Helvetica Neue"), 
                    nudge_y = 100000, 
                    nudge_x = -10, 
                    size = 4, 
@@ -132,7 +132,7 @@ cases_p <- total_smoothed_plot %>%
   scale_x_date(date_labels = "%B") +
   theme_classic() +
   theme(
-    text            = element_text(family = "Lato"),
+    text            = element_text(family = "Helvetica Neue"),
     axis.text.x     = element_text(size = 11, vjust = 0.5),
     axis.text.y     = element_text(size = 11),
     axis.title.x    = element_text(size = 11, face = "bold"),
