@@ -29,77 +29,11 @@ dat <- fread("data/covid19india_national_counts_20211031.csv")
 dat <- dat[, active_cases := (total_cases - total_recovered) / 10000][
   , `:=` (hosp_cases = active_cases * hosp_rate, icu_cases = active_cases * (hosp_rate * icu_rate), scenario = "Observed", date = as.Date(date))][]
 
-extracto <- function(x, start = as.Date("2021-02-19"), l_out = 199,
-                     scen = "Tier II\n(February 19)", sp = 0.75,
-                     correct = TRUE) {
-  
-  cli::cli_alert_info("*beep boop* loading data...")
-  load(x)
-  cli::cli_alert_success("*beep boop* data loaded!")
-  
-  tmp <- data.table(
-    date   = seq.Date(from = start, length.out = l_out, by = "day"),
-    i_prop = colMeans(theta_pp[, , 2])
-  )[, active_cases := (1.34e9 * i_prop) / 10000][]
-  
-  tmp_out <- rbindlist(
-    list(
-      dat[date < as.Date(start)],
-      tmp[data.table::between(date, as.Date(start), as.Date(end_date))][, place := "India"]
-    ), fill = TRUE
-  )[,
-    smooth_active := predict(loess(active_cases ~ as.numeric(date), span = sp))
-  ][
-    , `:=` (
-      hosp_cases = smooth_active * hosp_rate,
-      icu_cases  = smooth_active * hosp_rate * icu_rate,
-      scenario   = scen
-    )][, `:=` (hosp_cases = ifelse(hosp_cases < 0, 0, hosp_cases), icu_cases = ifelse(icu_cases < 0, 0, icu_cases))][date >= as.Date(start)][]
-  
-  if (correct == TRUE) {
-    tmp_out[, hosp_cases := hosp_cases * dat[date == start][, last(hosp_cases)] / tmp_out[, first(hosp_cases)]]
-    tmp_out[, icu_cases := icu_cases * dat[date == start][, last(icu_cases)] / tmp_out[, first(icu_cases)]]
-  }
-  
-  return(tmp_out)
-  
-}
-
-#### early intervention -----------
-feb_19 <- extracto(
-  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_t2_r2_forecast_MCMC.RData",
-  start = as.Date("2021-02-19"),
-  scen  = "Tier II\n(February 19)",
-  sp    = 0.15
-  )
-
-mar_13 <- extracto(
-  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-13_t3_r2_forecast_MCMC.RData",
-  start = as.Date("2021-03-13"),
-  scen  = "Tier III\n(March 13)",
-  sp    = 0.15
-)
-
-mar_19 <- extracto(
-  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-19_t4_r2_forecast_MCMC.RData",
-  start = as.Date("2021-03-19"),
-  scen  = "Tier IV\n(March 19)",
-  sp    = 0.15
-)
-
-mar_30 <- extracto(
-  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-30_t4_r2_forecast_MCMC.RData",
-  start = as.Date("2021-03-30"),
-  scen  = "Tier IV\n(March 30)",
-  sp    = 0.15
-)
-
-apr_15 <- extracto(
-  x     = "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-04-15_t4_r2_forecast_MCMC.RData",
-  start = as.Date("2021-04-15"),
-  scen  = "Tier IV\n(April 15)",
-  sp    = 0.15
-)
+feb_19 <- fread("seirfansy_data/Tier2_A.csv")[, scenario := "Moderate PHI\n(non-lockdown)\n(February 19)"][, .(date = dates, active_cases = value / 10000, scenario)][, `:=` (hosp_cases = active_cases * hosp_rate, icu_cases = active_cases * (hosp_rate * icu_rate), date = as.Date(date))][date >= as.Date("2021-02-19")]
+mar_13 <- fread("seirfansy_data/Tier3_A.csv")[, scenario := "Strengthened PHI\n(non-lockdown)\n(March 13)"][, .(date = dates, active_cases = value / 10000, scenario)][, `:=` (hosp_cases = active_cases * hosp_rate, icu_cases = active_cases * (hosp_rate * icu_rate), date = as.Date(date))][date >= as.Date("2021-03-13")]
+mar_19 <- fread("seirfansy_data/Tier4_1_A.csv")[, scenario := "Moderate lockdown\n(March 19)"][, .(date = dates, active_cases = value / 10000, scenario)][, `:=` (hosp_cases = active_cases * hosp_rate, icu_cases = active_cases * (hosp_rate * icu_rate), date = as.Date(date))][date >= as.Date("2021-03-19")]
+mar_30 <- fread("seirfansy_data/Tier4_2_A.csv")[, scenario := "Moderate lockdown\n(March 30)"][, .(date = dates, active_cases = value / 10000, scenario)][, `:=` (hosp_cases = active_cases * hosp_rate, icu_cases = active_cases * (hosp_rate * icu_rate), date = as.Date(date))][date >= as.Date("2021-03-30")]
+apr_15 <- fread("seirfansy_data/Tier4_3_A (1).csv")[, scenario := "Moderate lockdown\n(April 15)"][, .(date = dates, active_cases = value / 10000, scenario)][, `:=` (hosp_cases = active_cases * hosp_rate, icu_cases = active_cases * (hosp_rate * icu_rate), date = as.Date(date))][date >= as.Date("2021-04-15")]
 
 # combine -----------
 plot_dat <- rbindlist(
@@ -111,7 +45,7 @@ plot_dat <- rbindlist(
     mar_30,
     apr_15
   ), fill = TRUE
-)
+)[date <= as.Date("2021-06-30")]
 ####
 
 cols <- c(
@@ -213,14 +147,14 @@ full_plot <- patched +
   )
 
 ggsave(
-  filename = "fig/hospital_capacity_plot.pdf",
+  filename = "fig/seirfansy_hospital_capacity_plot.pdf",
   plot = full_plot,
   width = 8, height = 9,
   device = cairo_pdf
 )
 
 ggsave(
-  filename = "fig/hospital_capacity_plot.png",
+  filename = "fig/seirfansy_hospital_capacity_plot.png",
   plot = full_plot,
   width = 8, height = 9, units = "in", dpi = 320,
   device = png

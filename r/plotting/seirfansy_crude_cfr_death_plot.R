@@ -143,7 +143,7 @@ death_plt <- function(dat, title,
     geom_label_repel(data = rbindlist(list(
       unique(dat[, .SD[fitted == max(fitted)], by = scenario][, .(scenario, date, fitted)][!(scenario %in% c("Observed", "No intervention"))][, fitted_val := fitted][]),
       data.table(scenario = "Observed", date = as.Date("2021-05-18"), fitted = 4529, fitted_val = dat[scenario == "Observed" & date == "2021-05-18", fitted])), fill = TRUE),
-      aes(x = date, y = fitted_val, label = paste0(formatC(round(fitted), format="f", big.mark=",", digits=0), " deaths"), color = scenario, family = "Lato"),
+      aes(x = date, y = fitted_val, label = paste0(formatC(round(fitted), format="f", big.mark=",", digits=0), " deaths"), color = scenario, family = "Helvetica Neue"),
       nudge_y = tmp_nudge,
       nudge_x = -10,
       size = 4,
@@ -156,7 +156,7 @@ death_plt <- function(dat, title,
       x    = as.Date(c("2021-04-22", "2021-02-09", "2021-03-03", "2021-03-11", "2021-03-23", "2021-04-09")), 
       y    = tmp_repel_y 
     )][],
-    aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Lato"),
+    aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Helvetica Neue"),
     size = 4, hjust = c(0, 1, 1, 0, 0, 0), show.legend = FALSE) +
     
     # # date labels
@@ -164,7 +164,7 @@ death_plt <- function(dat, title,
     #   text = c("Observed data", "February 19\nTier II", "March 13\nTier III", "March 19\nTier IV", "March 30\nTier IV", "April 15\nTier IV"), 
     #   x    = as.Date(c("2021-04-22", "2021-02-09", "2021-03-03", "2021-03-11", "2021-03-23", "2021-04-09")), 
     #   y    = tmp_repel_y)][],
-    # aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Lato"),
+    # aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Helvetica Neue"),
     # size = 4, hjust = c(0, 1, 1, 0, 0, 0), show.legend = FALSE) +
     
     # other stuff
@@ -177,7 +177,7 @@ death_plt <- function(dat, title,
     scale_x_date(date_labels = "%B", date_breaks = "1 month") +
     theme_classic() +
     theme(
-      text            = element_text(family = "Lato"),
+      text            = element_text(family = "Helvetica Neue"),
       axis.text.x     = element_text(size = 11, vjust = 0.5),
       axis.text.y     = element_text(size = 11),
       axis.title.x    = element_text(size = 11, face = "bold"),
@@ -208,12 +208,12 @@ full_plt <- patched +
     tag_levels = c("A")
   ) &
   theme(
-    text              = element_text(family = "Lato"),
+    text              = element_text(family = "Helvetica Neue"),
     plot.title        = element_text(size = 18, face = "bold"),
     plot.subtitle     = element_text(size = 14, hjust = 0, color = "gray40"),
     plot.caption      = element_markdown(size = 12, hjust = 0),
     plot.tag.position = c(0, 1),
-    plot.tag          = element_text(size = 18, hjust = 0, vjust = 1, family = "Lato", face = "bold")
+    plot.tag          = element_text(size = 18, hjust = 0, vjust = 1, family = "Helvetica Neue", face = "bold")
   )
 
 full_plt

@@ -2,8 +2,7 @@
 ally::libri(tidyverse, lubridate, ggsci, ggrepel, data.table,
             janitor, glue, here, ggtext, patchwork)
 
-f <- list.files(here("src"))
-for (i in seq_along(f)) {source(here("src", f[i]))}
+source("esir_ally.R")
 
 end_date <- as.Date("2021-06-30")
 
@@ -189,8 +188,8 @@ cases_p <- tsp[, lt := "solid"][scenario == "Tier 4 - March 30", lt := "longdash
 full_plt <- cases_p +
   labs(
     title    = "Predicted number of daily COVID-19 cases under various interventions with waning immunity",
-    subtitle = glue("{format(as.Date(start_date), '%B %e, %Y')} to {format(as.Date(end_date), '%B %e, %Y')}"),
-    caption  = glue("**Notes:** Observations and prediction period until {format(as.Date(end_date), '%B %e, %Y')}. ",
+    subtitle = glue("{format_date(cases_p$data[, min(date)])} to {format_date(cases_p$data[, max(date)])}"),
+    caption  = glue("**Notes:** Observations and prediction period until {format_date(cases_p$data[, max(date)])}. ",
                     "Figures in boxes show peak number of cases for each intervention.<br>",
                     "**\uA9 COV-IND-19 Study Group**")
   )
