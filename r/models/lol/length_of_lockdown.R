@@ -1,6 +1,6 @@
 # libraries ----------
 ally::libri( tidyverse, chron, rjags, gtools, here, devtools,
-             lilywang1988/eSIR, glue, data.table)
+             lilywang1988/eSIR, glue, data.table, zoo)
 
 source("~/projects/science_revision/esir_ally.R")
 
