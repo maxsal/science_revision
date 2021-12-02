@@ -1,14 +1,15 @@
 # libraries ----------
 ally::libri(tidyverse, lubridate, ggsci, ggrepel, janitor, glue, here,
                ggtext, patchwork, data.table)
-f <- list.files(here("src"))
-for (i in seq_along(f)) {source(here("src", f[i]))}
+source("esir_ally.R")
 
 start_date <- as.Date("2021-01-01")
 end_date <- as.Date("2021-06-30")
 
 tmp_outname  <- glue("r02_v_r05_case_plot")
 tmp_title    <- "Effect of different interventions at different times"
+
+path_to_files <- "/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/"
 
 # helper function -------------
 clean_prep <- function(x) {
@@ -63,67 +64,43 @@ clean_prep <- function(x) {
 
 ### R0 = 2 ###
 # load data ----------
-obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
-              col_types = cols()) %>%
-  clean_names() %>%
-  rename(
-    daily_cases  = daily_confirmed,
-    daily_deaths = daily_deceased,
-    total_cases  = total_confirmed,
-    total_deaths = total_deceased
-  ) %>%
-  select(-date) %>%
-  rename(date = date_ymd) %>%
-  filter(date >= start_date)
+obs <- fread("data/covid19india_national_counts_20211031.csv")[, date := as.Date(date)][date >= start_date]
 
 r_0 <- 2
-d1 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-13_t3_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-13", tier = "Tier 3", scenario = "Tier 3 - March 13")
-d2 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-19_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-19", tier = "Tier 4", scenario = "Tier 4 - March 19")
-d3 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-30_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-30", tier = "Tier 4", scenario = "Tier 4 - March 30")
-d4 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-04-15_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-04-15", tier = "Tier 4", scenario = "Tier 4 - April 15")
-d0 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_t2_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-02-19", tier = "Tier 2", scenario = "Tier 2 - February 19")
+
+d1 <- fread(glue("{path_to_files}2021-03-13_t3_r{r_0}_data.txt"))[, `:=` (
+  start_date = "2021-03-13", tier = "Tier 3", scenario = "Tier 3 - March 13")]
+d2 <- fread(glue("{path_to_files}2021-03-19_t4_r{r_0}_data.txt"))[, `:=` (
+  start_date = "2021-03-19", tier = "Tier 4", scenario = "Tier 4 - March 19")]
+d3 <- fread(glue("{path_to_files}2021-03-30_t4_r{r_0}_data.txt"))[, `:=` (
+    start_date = "2021-03-30", tier = "Tier 4", scenario = "Tier 4 - March 30")]
+d4 <- fread(glue("{path_to_files}2021-04-15_t4_r{r_0}_data.txt"))[, `:=` (
+  start_date = "2021-04-15", tier = "Tier 4", scenario = "Tier 4 - April 15")]
+d0 <- fread(glue("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_t2_r{r_0}_data.txt"))[, `:=` (
+  start_date = "2021-02-19", tier = "Tier 2", scenario = "Tier 2 - February 19")]
 
 
-d <- bind_rows(
+p <- rbindlist(list(
   d0, d1, d2, d3, d4
-)
-
-p <- d %>% filter(scenario %in% c("Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15"))
+))[, date := as.Date(date)][
+  scenario %in% c("Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15")]
 
 # prepare data ----------
-total_smoothed_plot    <- clean_prep(x = p)
+tps <- as.data.table(clean_prep(x = p))
 
-obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
-                col_types = cols(), show_col_types = FALSE) %>%
-  clean_names() %>%
-  rename(
-    daily_cases  = daily_confirmed,
-    daily_deaths = daily_deceased,
-    total_cases  = total_confirmed,
-    total_deaths = total_deceased
-  ) %>%
-  select(-date) %>%
-  rename(date = date_ymd) %>%
-  filter(date >= "2021-02-01")
-
-
-# plot -----------
-tps <- as.data.table(total_smoothed_plot)
 tps[scenario == "Tier 2 - February 19", scenario := "Tier 2"]
 tps[scenario == "Tier 3 - March 13", scenario := "Tier 3"]
 tps[scenario == "Tier 4 - March 19", scenario := "Tier 4"]
 tps[, scenario := factor(scenario, levels = c("Observed", "Tier 2", "Tier 3", "Tier 4",
                                               "Tier 4 - March 30", "Tier 4 - April 15"))]
 
-r0_2_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"][scenario == "Tier 4 - March 30", lt := "longdash"][scenario == "Tier 4 - April 15", lt := "dotted"][] %>%
+lts <- c(rep("solid", 4), "dashed", "dotted")
+names(lts) <- tps[, unique(scenario)]
+
+r0_2_p <- tps[data.table::between(date, start_date, end_date)][] %>%
   ggplot(aes(x = date, y = fitted)) + 
-  geom_line(aes(color = scenario, linetype = lt), size = 1) +
-  scale_linetype_identity() +
+  geom_line(aes(color = scenario, linetype = scenario), size = 1) +
+  scale_linetype_manual(values = lts) +
   scale_color_manual(values = colores4) +
   
   # vertical lines
@@ -150,7 +127,6 @@ r0_2_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"][
   )][],
   aes(x = x, y = y, label = text, color = scenario, vjust = 1, family = "Helvetica"),
   size = 3.5, hjust = c(0, 1, 1, 0, 0, 0), show.legend = FALSE) +
-  # guides(color = guide_legend(nrow = 1)) + 
   labs(title    = tmp_title,
        y        = "Daily cases",
        x        = "",
@@ -176,67 +152,51 @@ r0_2_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"][
 
 ### R0 = 5 ###
 # load data ----------
-obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
-                col_types = cols()) %>%
-  clean_names() %>%
-  rename(
-    daily_cases  = daily_confirmed,
-    daily_deaths = daily_deceased,
-    total_cases  = total_confirmed,
-    total_deaths = total_deceased
-  ) %>%
-  select(-date) %>%
-  rename(date = date_ymd) %>%
-  filter(date >= start_date)
+# obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
+#                 col_types = cols()) %>%
+#   clean_names() %>%
+#   rename(
+#     daily_cases  = daily_confirmed,
+#     daily_deaths = daily_deceased,
+#     total_cases  = total_confirmed,
+#     total_deaths = total_deceased
+#   ) %>%
+#   select(-date) %>%
+#   rename(date = date_ymd) %>%
+#   filter(date >= start_date)
 
 r_0 <- 5
-d1 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-13_t3_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-13", tier = "Tier 3", scenario = "Tier 3 - March 13")
-d2 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-19_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-19", tier = "Tier 4", scenario = "Tier 4 - March 19")
-d3 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-03-30_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-03-30", tier = "Tier 4", scenario = "Tier 4 - March 30")
-d4 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_lockdown/2021-04-15_t4_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-04-15", tier = "Tier 4", scenario = "Tier 4 - April 15")
-d0 <- read_tsv(glue("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_t2_r{r_0}_data.txt"), col_types = cols()) %>%
-  mutate(start_date = "2021-02-19", tier = "Tier 2", scenario = "Tier 2 - February 19")
+
+d1 <- fread(glue("{path_to_files}2021-03-13_t3_r{r_0}_data.txt"))[, `:=` (
+  start_date = "2021-03-13", tier = "Tier 3", scenario = "Tier 3 - March 13")]
+d2 <- fread(glue("{path_to_files}2021-03-19_t4_r{r_0}_data.txt"))[, `:=` (
+  start_date = "2021-03-19", tier = "Tier 4", scenario = "Tier 4 - March 19")]
+d3 <- fread(glue("{path_to_files}2021-03-30_t4_r{r_0}_data.txt"))[, `:=` (
+  start_date = "2021-03-30", tier = "Tier 4", scenario = "Tier 4 - March 30")]
+d4 <- fread(glue("{path_to_files}2021-04-15_t4_r{r_0}_data.txt"))[, `:=` (
+  start_date = "2021-04-15", tier = "Tier 4", scenario = "Tier 4 - April 15")]
+d0 <- fread(glue("/Volumes/tiny/projects/covid/science_revision/data/early_intervention/2021-02-19_20pct_t2_r{r_0}_data.txt"))[, `:=` (
+  start_date = "2021-02-19", tier = "Tier 2", scenario = "Tier 2 - February 19")]
 
 
-d <- bind_rows(
+p <- rbindlist(list(
   d0, d1, d2, d3, d4
-)
-
-p <- d %>% filter(scenario %in% c("Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15"))
+))[, date := as.Date(date)][
+  scenario %in% c("Tier 2 - February 19", "Tier 3 - March 13", "Tier 4 - March 19", "Tier 4 - March 30", "Tier 4 - April 15")]
 
 # prepare data ----------
-total_smoothed_plot    <- clean_prep(x = p)
+tps    <- as.data.table(clean_prep(x = p))
 
-obs <- read_csv("https://api.covid19india.org/csv/latest/case_time_series.csv",
-                col_types = cols(), show_col_types = FALSE) %>%
-  clean_names() %>%
-  rename(
-    daily_cases  = daily_confirmed,
-    daily_deaths = daily_deceased,
-    total_cases  = total_confirmed,
-    total_deaths = total_deceased
-  ) %>%
-  select(-date) %>%
-  rename(date = date_ymd) %>%
-  filter(date >= "2021-02-01")
-
-
-# plot -----------
-tps <- as.data.table(total_smoothed_plot)
 tps[scenario == "Tier 2 - February 19", scenario := "Tier 2"]
 tps[scenario == "Tier 3 - March 13", scenario := "Tier 3"]
 tps[scenario == "Tier 4 - March 19", scenario := "Tier 4"]
 tps[, scenario := factor(scenario, levels = c("Observed", "Tier 2", "Tier 3", "Tier 4",
                                               "Tier 4 - March 30", "Tier 4 - April 15"))]
 
-r0_5_p <- tps[data.table::between(date, start_date, end_date)][, lt := "solid"][scenario == "Tier 4 - March 30", lt := "longdash"][scenario == "Tier 4 - April 15", lt := "dotted"][] %>%
+r0_5_p <- tps[data.table::between(date, start_date, end_date)][] %>%
   ggplot(aes(x = date, y = fitted)) + 
-  geom_line(aes(color = scenario, linetype = lt), size = 1) +
-  scale_linetype_identity() +
+  geom_line(aes(color = scenario, linetype = scenario), size = 1) +
+  scale_linetype_manual(values = lts) +
   scale_color_manual(values = colores4) +
   
   # vertical lines

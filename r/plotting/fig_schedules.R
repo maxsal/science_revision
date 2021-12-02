@@ -6,10 +6,10 @@ for (i in seq_along(f)) {source(here("src", f[i]))}
 end_date <- as.Date("2021-06-30")
 
 cols_1 <- c(
-  "Moderate PHI" = colores[["MH Pre-lock +20%"]][[1]],
-  "Strengthened PHI"    = colores[["MH Pre-lock"]][[2]],
-  "Moderate lockdown"     = colores[["Moderate lockdown"]][[2]],
-  "Strong lockdown"       = colores[["Strong lockdown"]][[2]]
+  "Moderate PHI\n(non-lockdown)"     = colores[["MH Pre-lock +20%"]][[1]],
+  "Strengthened PHI\n(non-lockdown)" = colores[["MH Pre-lock"]][[2]],
+  "Moderate lockdown"                = colores[["Moderate lockdown"]][[2]],
+  "Strong lockdown"                  = colores[["Strong lockdown"]][[2]]
 )
 
 cols_2 <- c(
@@ -33,8 +33,8 @@ pis <- bind_rows(pis, mh20_pis) %>%
     place = case_when(
       place == "India" ~ "Strong lockdown",
       place == "Maharashtra" ~ "Moderate lockdown",
-      place == "Maharashtra early" ~ "Strengthened PHI",
-      place == "MH Pre-lock +20%" ~ "Moderate PHI"
+      place == "Maharashtra early" ~ "Strengthened PHI\n(non-lockdown)",
+      place == "MH Pre-lock +20%" ~ "Moderate PHI\n(non-lockdown)"
     )
   )
 
@@ -76,7 +76,7 @@ cfr_plt <- cfrs %>%
   labs(
     title   = "CFR schedules",
     x       = "Date",
-    y       = "Case-fatality rate (CFR)",
+    y       = "Case fatality rate (CFR)",
     caption = glue::glue("Note: February 15, 2021 to {format(end_date, '%B %e, %Y')}")
   ) +
   scale_y_continuous(labels = scales::percent) +
@@ -103,7 +103,7 @@ patched <- pi_plt + cfr_plt
 full_plt <- patched +
   plot_annotation(
     title    = "Illustration of intervention and CFR schedules",
-    caption  = glue("**Abbrev:** CFR, case-fatality rate<br>",
+    caption  = glue("**Abbrev:** CFR, case fatality rate<br>",
                     "**\uA9 COV-IND-19 Study Group**"),
     tag_levels = c("A")
   ) &

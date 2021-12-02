@@ -1,13 +1,8 @@
-library(data.table)
-library(glue)
-library(ggplot2)
-library(ggsci)
-
+ally::libri(data.table, glue, ggplot2, ggsci)
 source("esir_ally.R")
 
-fldr <- "test"
+obs <- fread("data/covid19india_national_counts_20211031.csv")[, date := as.Date(date)]
 
-dat <- fread("data_for_lockdown_extended.csv")[place == "India"][, date := as.Date(date)]
 seir <- as.data.table(readRDS("seirfansy_data/No_Intervention.rds")$Cases_Deaths)[, .(date = dates, daily_cases = P_daily, daily_deaths = D_daily)][, date := as.Date(date)][, scenario := "SEIRfansy"]
 
 last_obs   <- as.Date("2021-03-18")
@@ -15,7 +10,7 @@ start_obs  <- last_obs - 99
 start_proj <- last_obs + 1
 last_proj  <- last_obs + 150
 
-d <- dat[between(date, start_obs - 14, last_proj + 14)][, smooth_cases := predict(loess(daily_cases ~ as.numeric(date), span = 0.3))][between(date, start_obs, last_proj)][, scenario := "Observed"]
+d <- obs[between(date, start_obs - 14, last_proj + 14)][, smooth_cases := predict(loess(daily_cases ~ as.numeric(date), span = 0.3))][between(date, start_obs, last_proj)][, scenario := "Observed"]
 
 end_date <- as.Date("2021-04-15")
 

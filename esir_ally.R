@@ -1,6 +1,7 @@
 # LIBRARIES -----------
 library(tidyverse)
 library(glue)
+library(data.table)
 
 # FOR eSIR OUTPUT ----------
 cleanr_esir <- function(f_out = NULL, name = NULL, adj = T, adj_len = 2, out_obs = FALSE, obs_dat = NULL, N = 1.34e9) {
@@ -119,14 +120,19 @@ cleanr_esir <- function(f_out = NULL, name = NULL, adj = T, adj_len = 2, out_obs
 # PREPARING DATA FOR PLOTTING -----------
 # case data
 clean_scenario <- function(dat, p, stop_obs, scen, end_date = "2021-05-15") {
+  
+  # rbindlist(list(
+  #   dat[date <= as.Date(stop_obs)][, .(date, incidence = daily_cases)],
+  #   p[scenario == scen][, .(date, incidence)]
+  #   ))[, scenario := scen][date <= end_date][]
   dat %>%  # dat is the observed data
-    filter(date <= stop_obs) %>% 
-    select(date, daily_cases) %>% 
-    rename(incidence = daily_cases) %>% 
-    add_row(p %>%  
-              filter(scenario == scen) %>% 
-              select(date, incidence) %>% 
-              drop_na()) %>% 
+    filter(date <= stop_obs) %>%
+    select(date, daily_cases) %>%
+    rename(incidence = daily_cases) %>%
+    add_row(p %>%
+              filter(scenario == scen) %>%
+              select(date, incidence) %>%
+              drop_na()) %>%
     add_column(scenario = scen) %>%
     filter(date <= end_date)
 }
